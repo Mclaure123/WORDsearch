@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WORD SEARCH v1.0.0 (r19 - NO_SCROLLBAR_FIX)</title>
+    <title>WORD SEARCH v1.0.0 (r20 - DELETE_PROFILE_STABLE)</title>
     <style>
         :root {
             --color-bg-primary: #0A0A0A; --color-surface: #141414; --color-func: #2A2A2A; --color-text-passive: #B0B0B0; --color-text-bright: #FFFFFF; --color-accent-primary: #00FFFF; --color-accent-primary-glow: rgba(0, 255, 255, 0.4); --color-accent-bios: #00FF8A; --color-error: #FF414B; --color-success: #39FF14; --color-accent-gold: #FFD700;
@@ -39,6 +39,11 @@
         .telemetry-footer { padding: var(--gap-s); border-top: 1px solid var(--color-surface); }
         
         .menu-list { display: flex; flex-direction: column; gap: var(--gap-m); width: clamp(320px, 80vw, 800px); }
+        #profilesList { list-style: none; }
+        .profile-entry { display: flex; gap: var(--gap-s); align-items: center; width: 100%; }
+        .profile-button { flex-grow: 1; text-align: left; }
+        .delete-button { flex-shrink: 0; background-color: var(--color-error); border-color: #8B0000; width: 44px; height: 44px; font-size: 1.2rem; padding: 0; }
+
         #playerNameDisplay { width: calc(var(--key-size) * 8 + var(--gap-s) * 7); height: calc(var(--key-size) * 1.2); font-size: calc(var(--key-size) * 0.6); background-color: var(--color-surface); border: 2px solid var(--color-func); color: var(--color-accent-primary); display: flex; justify-content: center; align-items: center; letter-spacing: 4px; margin-bottom: var(--gap-m); }
         #virtualKeyboard { display: grid; grid-template-columns: repeat(8, var(--key-size)); grid-template-rows: repeat(4, var(--key-size)); gap: var(--gap-s); }
         
@@ -80,25 +85,25 @@
             <div id="profiles" class="window">
                 <header class="telemetry-header"><span>WORD SEARCH :: SELECT PROFILE</span></header>
                 <div class="window-content"><h2>PERFILES DE USUARIO</h2><ul id="profilesList" class="menu-list"></ul><button id="goToPlayerCreateButton" class="interactive-button">CREAR NUEVO PERFIL</button></div>
-                <footer class="telemetry-footer">BUILD: v1.0.0-r19</footer>
+                <footer class="telemetry-footer">BUILD: v1.0.0-r20</footer>
             </div>
 
             <div id="player" class="window">
                  <header class="telemetry-header"><span>WORD SEARCH :: CREATE PROFILE</span></header>
                  <div class="window-content"><h2>NUEVO JUGADOR</h2><div id="playerNameDisplay">_</div><div id="virtualKeyboard"></div><button id="cancelPlayerButton" style="margin-top: var(--gap-m);">CANCELAR</button></div>
-                 <footer class="telemetry-footer">BUILD: v1.0.0-r19</footer>
+                 <footer class="telemetry-footer">BUILD: v1.0.0-r20</footer>
             </div>
 
             <div id="mainMenu" class="window">
                 <header class="telemetry-header"><span>WORD SEARCH :: MAIN MENU</span></header>
                 <div class="window-content"><h2 id="mainMenuHeader"></h2><div id="levelGrid" class="menu-list"></div><button id="backToProfilesButton" style="margin-top:var(--gap-l);">CAMBIAR PERFIL</button></div>
-                <footer class="telemetry-footer">BUILD: v1.0.0-r19</footer>
+                <footer class="telemetry-footer">BUILD: v1.0.0-r20</footer>
             </div>
 
             <div id="game" class="window">
                 <header class="telemetry-header"><span id="gameHeaderTitle">JUGADOR :: CARGANDO...</span></header>
                 <div class="window-content"><div id="holographic-panel"><div id="wordSearchGrid"></div><div id="wordListContainer"><h3>PALABRAS A ENCONTRAR</h3><ul id="wordList"></ul></div></div></div>
-                <footer class="telemetry-footer">BUILD: v1.0.0-r19</footer>
+                <footer class="telemetry-footer">BUILD: v1.0.0-r20</footer>
             </div>
 
             <div id="victory" class="window"><h1>NIVEL COMPLETADO</h1><div id="victoryRankProgress"></div><button id="victoryToMenuButton">CONTINUAR</button></div>
@@ -148,7 +153,25 @@
     }
     function showWindow(id) { for (var k in windows) { if(windows[k]) windows[k].classList.remove('active'); } if(windows[id]) windows[id].classList.add('active'); state.currentWindow = id; }
     function fisherYatesShuffle(a){var m=a.length,t,i;while(m){i=Math.floor(Math.random()*m--);t=a[m];a[m]=a[i];a[i]=t}return a}
-    function renderProfiles() { ui.profilesList.innerHTML = ''; Object.keys(state.profiles).forEach(function(name) { var li = document.createElement('li'); var btn = document.createElement('button'); btn.textContent = name; btn.className = 'interactive-button'; btn.dataset.profileName = name; li.appendChild(btn); ui.profilesList.appendChild(li); }); }
+    
+    function renderProfiles() {
+        ui.profilesList.innerHTML = '';
+        Object.keys(state.profiles).forEach(function(name) {
+            var li = document.createElement('li');
+            li.className = 'profile-entry';
+            var btn = document.createElement('button');
+            btn.textContent = name;
+            btn.className = 'interactive-button profile-button';
+            btn.dataset.profileName = name;
+            var delBtn = document.createElement('button');
+            delBtn.textContent = 'X';
+            delBtn.className = 'delete-button';
+            delBtn.dataset.profileName = name;
+            li.appendChild(btn);
+            li.appendChild(delBtn);
+            ui.profilesList.appendChild(li);
+        });
+    }
     function renderPlayerKeyboard() { ui.virtualKeyboard.innerHTML = ''; PLAYER_KEYBOARD_LAYOUT.forEach(function(k) { var btn = document.createElement('button'); btn.className = 'interactive-button'; var t = k; if(k === 'Backspace') t='←'; if(k === 'Enter') t='↵'; if(k === 'Shift') t='⇧'; btn.textContent = t; btn.dataset.key = k; ui.virtualKeyboard.appendChild(btn); }); }
     
     function renderMainMenu() {
@@ -257,7 +280,19 @@
         ui.backToProfilesButton.addEventListener('click', function(){ EventBus.emit('profile:clearActive'); });
         ui.victoryToMenuButton.addEventListener('click', function(){ showWindow('mainMenu'); renderMainMenu(); });
         ui.reEnterFullscreenButton.addEventListener('click', function() { requestFullscreen(); });
-        ui.profilesList.addEventListener('click', function(e) { var name = e.target.dataset.profileName; if (name) { state.activeProfile = name; showWindow('mainMenu'); renderMainMenu(); } });
+        
+        ui.profilesList.addEventListener('click', function(e) {
+            var name = e.target.dataset.profileName;
+            if (!name) return;
+            if (e.target.classList.contains('profile-button')) {
+                state.activeProfile = name;
+                showWindow('mainMenu');
+                renderMainMenu();
+            } else if (e.target.classList.contains('delete-button')) {
+                EventBus.emit('profile:deleted', { profileName: name });
+            }
+        });
+
         ui.virtualKeyboard.addEventListener('click', function(e) {
             var key = e.target.dataset.key; if(!key) return;
             if (key === 'Enter') { var name = state.newPlayerName.trim(); if (name && !state.profiles[name]) { state.profiles[name] = { solvedWords: { facil: [], medio: [], dificil: [] }, ranks: { facil: 0, medio: 0, dificil: 0 }, repetitions: { facil: 0, medio: 0, dificil: 0 }, usedWords: { facil: [], medio: [], dificil: [] } }; saveProfiles(); renderProfiles(); state.newPlayerName = ''; ui.playerNameDisplay.textContent = '_'; showWindow('profiles'); }
@@ -265,6 +300,7 @@
             } else if (key !== 'Shift') { if(state.newPlayerName.length < 12) state.newPlayerName += key; }
             ui.playerNameDisplay.textContent = state.newPlayerName || '_';
         });
+        
         ui.levelGrid.addEventListener('click', function(e) { var card = e.target.closest('.level-card'); var diff = card ? card.dataset.difficulty : null; if (diff && state.activeProfile) { GameManager.startGame(diff); } });
         ui.wordSearchGrid.addEventListener('mousedown', function(e) { if(e.target.classList.contains('grid-cell')){ state.game.isSelecting = true; GameManager.clearSelectionUI(); state.game.selection = [e.target]; e.target.classList.add('selected'); } });
         ui.wordSearchGrid.addEventListener('mouseover', function(e) { if (state.game.isSelecting && e.target.classList.contains('grid-cell')) { GameManager.clearSelectionUI(); var startCell = state.game.selection[0], endCell = e.target; var startX = parseInt(startCell.dataset.x), startY = parseInt(startCell.dataset.y); var endX = parseInt(endCell.dataset.x), endY = parseInt(endCell.dataset.y); var dx = Math.sign(endX - startX), dy = Math.sign(endY - startY); if (Math.abs(endX - startX) !== Math.abs(endY - startY) && (startX !== endX && startY !== endY)) return; state.game.selection = [startCell]; var currX = startX, currY = startY; while (currX !== endX || currY !== endY) { currX += dx; currY += dy; var nextCell = ui.wordSearchGrid.querySelector('[data-x="' + currX + '"][data-y="' + currY + '"]'); if(nextCell) state.game.selection.push(nextCell); } state.game.selection.forEach(function(cell) { cell.classList.add('selected'); }); } });
@@ -274,9 +310,16 @@
         EventBus.on('system:requestNavigation', function(d) { if (d.requestFullscreen) { requestFullscreen(); } if(d.windowId === 'mainMenu') { renderMainMenu(); } if(d.windowId) { showWindow(d.windowId); } });
         EventBus.on('game:victory', function() { renderVictoryProgress(); showWindow('victory'); });
         EventBus.on('profile:clearActive', function() { state.activeProfile = null; showWindow('profiles'); renderProfiles(); });
+        EventBus.on('profile:deleted', function(d) {
+            if (confirm('¿ESTÁS SEGURO DE QUE QUIERES ELIMINAR EL PERFIL "' + d.profileName + '"? ESTA ACCIÓN ES PERMANENTE.')) {
+                delete state.profiles[d.profileName];
+                saveProfiles();
+                renderProfiles();
+            }
+        });
 
         setTimeout(function() { showWindow('title'); }, 1000);
-        console.log("Sistema WORD SEARCH v1.0.0-r19 estable inicializado.");
+        console.log("Sistema WORD SEARCH v1.0.0-r18 estable inicializado.");
     });
 })();
 </script>
