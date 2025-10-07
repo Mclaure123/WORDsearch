@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WORD SEARCH v1.0.0 (r16 - STABLE)</title>
+    <title>WORD SEARCH v1.0.0 (r19 - NO_SCROLLBAR_FIX)</title>
     <style>
         :root {
             --color-bg-primary: #0A0A0A; --color-surface: #141414; --color-func: #2A2A2A; --color-text-passive: #B0B0B0; --color-text-bright: #FFFFFF; --color-accent-primary: #00FFFF; --color-accent-primary-glow: rgba(0, 255, 255, 0.4); --color-accent-bios: #00FF8A; --color-error: #FF414B; --color-success: #39FF14; --color-accent-gold: #FFD700;
@@ -28,7 +28,7 @@
         main { width: 100%; height: 100%; position: absolute; top: 0; left: 0; transform-style: preserve-3d; }
         .window { width: 100%; height: 100%; padding: var(--gap-m) var(--gap-l); position: absolute; top: 0; left: 0; display: flex; flex-direction: column; justify-content: space-between; align-items: center; text-align: center; opacity: 0; transform: translateZ(-200px); pointer-events: none; visibility: hidden; transition: opacity 300ms ease-out, transform 300ms ease-out, visibility 300ms; }
         .window.active { opacity: 1; transform: translateZ(0px); pointer-events: auto; visibility: visible; }
-        .window-content { flex-grow: 1; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: var(--gap-m) 0; min-height: 0; overflow-y: auto; }
+        .window-content { flex-grow: 1; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: var(--gap-m) 0; min-height: 0; }
         #preload, #title { justify-content: center; }
         h1 { font-size: clamp(2rem, 10vmin, 5rem); color: var(--color-accent-primary); letter-spacing: clamp(4px, 1vmin, 8px); text-shadow: 0 0 5px var(--color-accent-primary), 0 0 15px var(--color-accent-primary), 0 0 25px var(--color-accent-primary); max-width: 100%; word-break: break-word; }
         h2 { font-size: clamp(1.2rem, 4vmin, 1.8rem); color: var(--color-text-bright); margin-bottom: var(--gap-m); }
@@ -42,8 +42,9 @@
         #playerNameDisplay { width: calc(var(--key-size) * 8 + var(--gap-s) * 7); height: calc(var(--key-size) * 1.2); font-size: calc(var(--key-size) * 0.6); background-color: var(--color-surface); border: 2px solid var(--color-func); color: var(--color-accent-primary); display: flex; justify-content: center; align-items: center; letter-spacing: 4px; margin-bottom: var(--gap-m); }
         #virtualKeyboard { display: grid; grid-template-columns: repeat(8, var(--key-size)); grid-template-rows: repeat(4, var(--key-size)); gap: var(--gap-s); }
         
-        .level-card { width: 100%; display: flex; align-items: center; justify-content: space-between; padding: var(--gap-m); text-align: left; }
-        .level-card .rank-glyph { font-size: clamp(2rem, 6vmin, 3rem); color: var(--color-accent-gold); margin-right: var(--gap-m); min-width: 40px; text-align: center; }
+        .level-card { width: 100%; display: flex; align-items: center; justify-content: space-between; padding: var(--gap-s) var(--gap-m); text-align: left; }
+        .rank-badge { width: clamp(50px, 12vmin, 70px); aspect-ratio: 1 / 1.2; margin-right: var(--gap-m); background: var(--color-accent-gold); clip-path: polygon(0% 0%, 100% 0%, 100% 80%, 50% 100%, 0% 80%); padding: 2px; }
+        .rank-glyph { width: 100%; height: 100%; background: var(--color-surface); clip-path: polygon(0% 0%, 100% 0%, 100% 80%, 50% 100%, 0% 80%); display: flex; align-items: center; justify-content: center; font-size: clamp(1.8rem, 8vmin, 2.8rem); color: var(--color-accent-gold); text-shadow: 0 0 8px var(--color-accent-gold); }
         .level-card .level-info { flex-grow: 1; }
         .level-card .level-name { font-size: clamp(1rem, 3.5vmin, 1.6rem); color: var(--color-text-bright); display: block; }
         .level-card .rank-name { font-size: clamp(0.8rem, 2.5vmin, 1.1rem); color: var(--color-text-passive); display: block; }
@@ -59,7 +60,7 @@
         .grid-cell { display: flex; justify-content: center; align-items: center; font-size: clamp(1rem, 4vmin, 2.5rem); color: var(--color-text-passive); background-color: var(--color-surface); cursor: pointer; user-select: none; transition: background-color 150ms, color 150ms, transform 100ms; }
         .grid-cell.selected { background-color: var(--color-accent-primary); color: var(--color-bg-primary) !important; transform: scale(1.1); }
         .grid-cell.found { background-color: var(--color-success) !important; color: var(--color-bg-primary) !important; }
-        #wordListContainer { background-color: var(--color-surface); border: 2px solid var(--color-func); padding: var(--gap-m); width: clamp(220px, 30vw, 350px); height: 100%; overflow-y: auto; }
+        #wordListContainer { background-color: var(--color-surface); border: 2px solid var(--color-func); padding: var(--gap-m); width: clamp(220px, 30vw, 350px); height: 100%; }
         #wordList { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: var(--gap-s); }
         #wordList li { font-size: clamp(1rem, 3vmin, 1.5rem); color: var(--color-text-bright); transition: color 220ms, text-decoration 220ms, opacity 220ms; text-align: left; }
         #wordList li.found { color: var(--color-success); text-decoration: line-through; opacity: 0.6; }
@@ -79,25 +80,25 @@
             <div id="profiles" class="window">
                 <header class="telemetry-header"><span>WORD SEARCH :: SELECT PROFILE</span></header>
                 <div class="window-content"><h2>PERFILES DE USUARIO</h2><ul id="profilesList" class="menu-list"></ul><button id="goToPlayerCreateButton" class="interactive-button">CREAR NUEVO PERFIL</button></div>
-                <footer class="telemetry-footer">BUILD: v1.0.0-r16</footer>
+                <footer class="telemetry-footer">BUILD: v1.0.0-r19</footer>
             </div>
 
             <div id="player" class="window">
                  <header class="telemetry-header"><span>WORD SEARCH :: CREATE PROFILE</span></header>
                  <div class="window-content"><h2>NUEVO JUGADOR</h2><div id="playerNameDisplay">_</div><div id="virtualKeyboard"></div><button id="cancelPlayerButton" style="margin-top: var(--gap-m);">CANCELAR</button></div>
-                 <footer class="telemetry-footer">BUILD: v1.0.0-r16</footer>
+                 <footer class="telemetry-footer">BUILD: v1.0.0-r19</footer>
             </div>
 
             <div id="mainMenu" class="window">
                 <header class="telemetry-header"><span>WORD SEARCH :: MAIN MENU</span></header>
                 <div class="window-content"><h2 id="mainMenuHeader"></h2><div id="levelGrid" class="menu-list"></div><button id="backToProfilesButton" style="margin-top:var(--gap-l);">CAMBIAR PERFIL</button></div>
-                <footer class="telemetry-footer">BUILD: v1.0.0-r16</footer>
+                <footer class="telemetry-footer">BUILD: v1.0.0-r19</footer>
             </div>
 
             <div id="game" class="window">
                 <header class="telemetry-header"><span id="gameHeaderTitle">JUGADOR :: CARGANDO...</span></header>
                 <div class="window-content"><div id="holographic-panel"><div id="wordSearchGrid"></div><div id="wordListContainer"><h3>PALABRAS A ENCONTRAR</h3><ul id="wordList"></ul></div></div></div>
-                <footer class="telemetry-footer">BUILD: v1.0.0-r16</footer>
+                <footer class="telemetry-footer">BUILD: v1.0.0-r19</footer>
             </div>
 
             <div id="victory" class="window"><h1>NIVEL COMPLETADO</h1><div id="victoryRankProgress"></div><button id="victoryToMenuButton">CONTINUAR</button></div>
@@ -127,16 +128,9 @@
         dificil: ['ALGORITMO', 'ANALOGICO', 'APLICACION', 'ARCHIVO', 'BACKEND', 'BINARIO', 'BIOMETRIA', 'BLUETOOTH', 'COMPILAR', 'CODIFICAR', 'CONSOLA', 'CONSTANTE', 'CONTRASEÑA', 'CPU', 'CRIPTOGRAFIA', 'DEPURADOR', 'DESCARGAR', 'DIRECTORIO', 'ENCRIPTAR', 'FRAMEWORK', 'FIREWALL', 'GIGABYTE', 'HARDWARE', 'HACKATHON', 'HERTZ', 'INTERFAZ', 'INTERNET', 'INTRANET', 'JAVASCRIPT', 'LICENCIA', 'MALWARE', 'MEMORIA', 'METADATOS', 'MICROCHIP', 'MODULAR']
     };
     var DIRECTIONS = [{f:'H',x:1,y:0},{f:'V',x:0,y:1},{f:'D',x:1,y:1},{f:'HI',x:-1,y:0},{f:'VI',x:0,y:-1},{f:'DI',x:-1,y:-1},{f:'DA',x:1,y:-1},{f:'DAI',x:-1,y:1}];
-    var RANKS = [ { name: 'RECLUTA', glyph: '›' }, { name: 'PRIVADO', glyph: '▲' }, { name: 'CORPORAL', glyph: '◆' }, { name: 'SARGENTO', glyph: '☰' }, { name: 'TENIENTE', glyph: '★' }, { name: 'CAPITÁN', glyph: '✪' }, { name: 'MAYOR', glyph: '❂' }, { name: 'CORONEL', glyph: '⚜' }, { name: 'GENERAL', glyph: '⚶' }, { name: 'MARISCAL', glyph: '✠' }];
+    var RANKS = [ { name: 'RECLUTA', glyph: 'ˇ' }, { name: 'PRIVADO', glyph: '∧' }, { name: 'CORPORAL', glyph: '≡' }, { name: 'SARGENTO', glyph: '∗' }, { name: 'TENIENTE', glyph: '★' }, { name: 'CAPITÁN', glyph: '✪' }, { name: 'MAYOR', glyph: '✯' }, { name: 'CORONEL', glyph: '⚜' }, { name: 'GENERAL', glyph: '⚝' }, { name: 'MARISCAL', glyph: '✠' }];
 
-    function requestFullscreen() {
-        var e = document.documentElement;
-        if (e.requestFullscreen) e.requestFullscreen();
-        else if (e.webkitRequestFullscreen) e.webkitRequestFullscreen();
-        else if (e.mozRequestFullScreen) e.mozRequestFullScreen();
-        else if (e.msRequestFullscreen) e.msRequestFullscreen();
-    }
-    
+    function requestFullscreen() { var e = document.documentElement; if (e.requestFullscreen) e.requestFullscreen(); else if (e.webkitRequestFullscreen) e.webkitRequestFullscreen(); else if (e.mozRequestFullScreen) e.mozRequestFullScreen(); else if (e.msRequestFullscreen) e.msRequestFullscreen(); }
     function saveProfiles() { try { localStorage.setItem(PROFILES_KEY, JSON.stringify(state.profiles)); } catch(e) {} }
     function loadProfiles() {
         try {
@@ -165,14 +159,16 @@
         Object.keys(WORD_LISTS).forEach(function(diff) {
             var rankIndex = profile.ranks[diff]; var rank = RANKS[rankIndex]; var reps = profile.repetitions[diff];
             var card = document.createElement('button'); card.className = 'interactive-button level-card'; card.dataset.difficulty = diff;
+            var badgeEl = document.createElement('div'); badgeEl.className = 'rank-badge';
             var glyphEl = document.createElement('span'); glyphEl.className = 'rank-glyph'; glyphEl.textContent = rank.glyph;
+            badgeEl.appendChild(glyphEl);
             var infoEl = document.createElement('div'); infoEl.className = 'level-info';
             var levelNameEl = document.createElement('span'); levelNameEl.className = 'level-name'; levelNameEl.textContent = 'NIVEL ' + diff.toUpperCase();
             var rankNameEl = document.createElement('span'); rankNameEl.className = 'rank-name'; rankNameEl.textContent = rank.name;
             infoEl.appendChild(levelNameEl); infoEl.appendChild(rankNameEl);
             var repsEl = document.createElement('div'); repsEl.className = 'repetition-container';
             for (var i = 0; i < 3; i++) { var box = document.createElement('div'); box.className = 'repetition-box' + (i < reps ? ' filled' : ''); repsEl.appendChild(box); }
-            card.appendChild(glyphEl); card.appendChild(infoEl); card.appendChild(repsEl);
+            card.appendChild(badgeEl); card.appendChild(infoEl); card.appendChild(repsEl);
             ui.levelGrid.appendChild(card);
         });
     }
@@ -180,20 +176,16 @@
     function generarNivelSopaDeLetras(difficulty) {
         var profile = state.profiles[state.activeProfile];
         var config = { facil: { size: 12, words: 7 }, medio: { size: 14, words: 7 }, dificil: { size: 16, words: 7 } }[difficulty];
-        
         var masterList = WORD_LISTS[difficulty];
         var usedList = profile.usedWords[difficulty];
         var availableWords = masterList.filter(function(word) { return !usedList.includes(word); });
-
         if (availableWords.length < config.words) {
             profile.usedWords[difficulty] = [];
             usedList = [];
             availableWords = masterList;
         }
-
         var wordsToPlace = fisherYatesShuffle(availableWords).slice(0, config.words);
         profile.usedWords[difficulty] = usedList.concat(wordsToPlace);
-        
         var grid = Array(config.size).fill(0).map(function() { return Array(config.size).fill(null); });
         var placedWords = [];
         wordsToPlace.forEach(function(word) {
@@ -257,19 +249,14 @@
     }
     document.addEventListener('DOMContentLoaded', function() {
         loadProfiles(); renderProfiles(); renderPlayerKeyboard();
-        
-        var initialKeyListener = function() {
-            EventBus.emit('system:requestNavigation', { windowId: 'profiles', requestFullscreen: true });
-        };
+        var initialKeyListener = function() { EventBus.emit('system:requestNavigation', { windowId: 'profiles', requestFullscreen: true }); };
         windows.title.addEventListener('click', initialKeyListener, { once: true });
         document.addEventListener('keydown', initialKeyListener, { once: true });
-        
         ui.goToPlayerCreateButton.addEventListener('click', function(){ showWindow('player'); });
         ui.cancelPlayerButton.addEventListener('click', function(){ showWindow('profiles'); });
-        ui.backToProfilesButton.addEventListener('click', function(){ showWindow('mainMenu'); renderMainMenu(); });
+        ui.backToProfilesButton.addEventListener('click', function(){ EventBus.emit('profile:clearActive'); });
         ui.victoryToMenuButton.addEventListener('click', function(){ showWindow('mainMenu'); renderMainMenu(); });
         ui.reEnterFullscreenButton.addEventListener('click', function() { requestFullscreen(); });
-        
         ui.profilesList.addEventListener('click', function(e) { var name = e.target.dataset.profileName; if (name) { state.activeProfile = name; showWindow('mainMenu'); renderMainMenu(); } });
         ui.virtualKeyboard.addEventListener('click', function(e) {
             var key = e.target.dataset.key; if(!key) return;
@@ -284,15 +271,12 @@
         document.body.addEventListener('mouseup', function() { if (state.game.isSelecting) { state.game.isSelecting = false; GameManager.handleSelectionEnd(); setTimeout(GameManager.clearSelectionUI, 200); } });
         document.body.addEventListener('mousemove', function(e) { if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return; var x = (e.clientX / window.innerWidth) - 0.5, y = (e.clientY / window.innerHeight) - 0.5; if(ui.holographicPanel) ui.holographicPanel.style.transform = 'rotateX(' + (10 + (y * -5)) + 'deg) rotateY(' + (x * 5) + 'deg)'; document.body.style.setProperty('--grid-x', (-x * 20) + 'px'); document.body.style.setProperty('--grid-y', (-y * 20) + 'px'); });
         
-        EventBus.on('system:requestNavigation', function(d) {
-            if (d.requestFullscreen) { requestFullscreen(); }
-            if(d.windowId === 'mainMenu') { renderMainMenu(); }
-            if(d.windowId) { showWindow(d.windowId); }
-        });
+        EventBus.on('system:requestNavigation', function(d) { if (d.requestFullscreen) { requestFullscreen(); } if(d.windowId === 'mainMenu') { renderMainMenu(); } if(d.windowId) { showWindow(d.windowId); } });
         EventBus.on('game:victory', function() { renderVictoryProgress(); showWindow('victory'); });
-        
+        EventBus.on('profile:clearActive', function() { state.activeProfile = null; showWindow('profiles'); renderProfiles(); });
+
         setTimeout(function() { showWindow('title'); }, 1000);
-        console.log("Sistema WORD SEARCH v1.0.0-r16 estable inicializado.");
+        console.log("Sistema WORD SEARCH v1.0.0-r19 estable inicializado.");
     });
 })();
 </script>
