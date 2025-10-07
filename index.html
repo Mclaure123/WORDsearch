@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WORD SEARCH v1.0.0 (r9 - LARGE_FONT)</title>
+    <title>WORD SEARCH v1.0.0 (r12 - RANK_SYSTEM)</title>
     <style>
         :root {
             --color-bg-primary: #0A0A0A; --color-surface: #141414; --color-func: #2A2A2A; --color-text-passive: #B0B0B0; --color-text-bright: #FFFFFF; --color-accent-primary: #00FFFF; --color-accent-primary-glow: rgba(0, 255, 255, 0.4); --color-accent-bios: #00FF8A; --color-error: #FF414B; --color-success: #39FF14; --color-accent-gold: #FFD700;
@@ -26,40 +26,42 @@
             opacity: 0.05; z-index: -1; transition: background-position 0.2s linear;
         }
         main { width: 100%; height: 100%; position: absolute; top: 0; left: 0; transform-style: preserve-3d; }
-        .window { width: 100%; height: 100%; padding: 0 var(--gap-l); position: absolute; top: 0; left: 0; display: flex; flex-direction: column; justify-content: space-between; align-items: center; text-align: center; opacity: 0; transform: translateZ(-200px); pointer-events: none; visibility: hidden; transition: opacity 300ms ease-out, transform 300ms ease-out, visibility 300ms; }
+        .window { width: 100%; height: 100%; padding: var(--gap-m) var(--gap-l); position: absolute; top: 0; left: 0; display: flex; flex-direction: column; justify-content: space-between; align-items: center; text-align: center; opacity: 0; transform: translateZ(-200px); pointer-events: none; visibility: hidden; transition: opacity 300ms ease-out, transform 300ms ease-out, visibility 300ms; }
         .window.active { opacity: 1; transform: translateZ(0px); pointer-events: auto; visibility: visible; }
         .window-content { flex-grow: 1; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: var(--gap-m) 0; min-height: 0; overflow-y: auto; }
-        #preload, #title, #victory, #gameOver { justify-content: center; padding: var(--gap-m) var(--gap-l); }
         h1 { font-size: clamp(2rem, 10vmin, 5rem); color: var(--color-accent-primary); letter-spacing: clamp(4px, 1vmin, 8px); text-shadow: 0 0 5px var(--color-accent-primary), 0 0 15px var(--color-accent-primary), 0 0 25px var(--color-accent-primary); max-width: 100%; word-break: break-word; }
         h2 { font-size: clamp(1.2rem, 4vmin, 1.8rem); color: var(--color-text-bright); margin-bottom: var(--gap-m); }
-        h3 { font-size: clamp(1rem, 3.5vmin, 1.5rem); color: var(--color-accent-primary); margin-bottom: var(--gap-m); border-bottom: 1px solid var(--color-func); padding-bottom: var(--gap-m); text-align: left; width: 100%;}
         .interactive-button, button { background-color: var(--color-func); border: 2px solid var(--color-surface); color: var(--color-text-bright); padding: var(--gap-s) var(--gap-m); font-family: inherit; font-size: clamp(0.9rem, 2.5vmin, 1.2rem); cursor: pointer; text-transform: uppercase; transition: background-color 220ms, border-color 220ms, color 220ms, opacity 220ms, transform 220ms; flex-shrink: 0; }
         .interactive-button:hover, button:hover { background-color: var(--color-surface); border-color: var(--color-accent-primary); }
         .telemetry-header, .telemetry-footer { width: 100%; flex-shrink: 0; text-transform: uppercase; color: var(--color-text-passive); font-size: clamp(0.7rem, 2vmin, 0.9rem); letter-spacing: 2px; }
-        .telemetry-header { display: flex; justify-content: space-between; align-items: center; padding: var(--gap-s); border-bottom: 1px solid var(--color-surface); position: relative; }
+        .telemetry-header { padding: var(--gap-s); border-bottom: 1px solid var(--color-surface); }
         .telemetry-footer { padding: var(--gap-s); border-top: 1px solid var(--color-surface); }
         
-        .menu-list { display: flex; flex-direction: column; gap: var(--gap-m); width: clamp(320px, 70vw, 700px); }
+        .menu-list { display: flex; flex-direction: column; gap: var(--gap-m); width: clamp(320px, 80vw, 800px); }
         #playerNameDisplay { width: calc(var(--key-size) * 8 + var(--gap-s) * 7); height: calc(var(--key-size) * 1.2); font-size: calc(var(--key-size) * 0.6); background-color: var(--color-surface); border: 2px solid var(--color-func); color: var(--color-accent-primary); display: flex; justify-content: center; align-items: center; letter-spacing: 4px; margin-bottom: var(--gap-m); }
         #virtualKeyboard { display: grid; grid-template-columns: repeat(8, var(--key-size)); grid-template-rows: repeat(4, var(--key-size)); gap: var(--gap-s); }
-        #backToProfilesButton { margin-top: var(--gap-m); }
+        
+        .level-card { width: 100%; display: flex; align-items: center; justify-content: space-between; padding: var(--gap-m); text-align: left; }
+        .level-card .rank-glyph { font-size: clamp(2rem, 6vmin, 3rem); color: var(--color-accent-gold); margin-right: var(--gap-m); min-width: 40px; text-align: center; }
+        .level-card .level-info { flex-grow: 1; }
+        .level-card .level-name { font-size: clamp(1rem, 3.5vmin, 1.6rem); color: var(--color-text-bright); display: block; }
+        .level-card .rank-name { font-size: clamp(0.8rem, 2.5vmin, 1.1rem); color: var(--color-text-passive); display: block; }
+        .level-card .repetition-container { display: flex; gap: var(--gap-s); margin-left: var(--gap-m); }
+        .repetition-box { width: clamp(16px, 4vmin, 24px); height: clamp(16px, 4vmin, 24px); border: 2px solid var(--color-func); background-color: transparent; transition: background-color 300ms; }
+        .repetition-box.filled { background-color: var(--color-accent-primary); }
+
+        #victoryRankProgress { margin: var(--gap-l) 0; }
+        .promotion-title { font-size: 1.5rem; color: var(--color-accent-gold); text-shadow: 0 0 10px var(--color-accent-gold); }
 
         #holographic-panel { display: flex; flex-direction: row; flex-wrap: nowrap; align-items: stretch; justify-content: center; gap: var(--gap-l); transform-style: preserve-3d; transform: rotateX(10deg); filter: drop-shadow(0 0 15px var(--color-accent-primary-glow)); width: auto; max-width: 95%; height: 85%; }
         #wordSearchGrid { display: grid; gap: 4px; background-color: rgba(0,0,0,0.2); padding: var(--gap-s); border: 2px solid var(--color-func); touch-action: none; height: 100%; aspect-ratio: 1 / 1; grid-template-columns: repeat(var(--grid-size, 10), 1fr); }
-        .grid-cell { 
-            display: flex; justify-content: center; align-items: center; 
-            font-size: clamp(1rem, 4vmin, 2.5rem); /* <-- FÓRMULA DE FUENTE MEJORADA */
-            color: var(--color-text-passive); background-color: var(--color-surface); 
-            cursor: pointer; user-select: none; 
-            transition: background-color 150ms, color 150ms, transform 100ms; 
-        }
+        .grid-cell { display: flex; justify-content: center; align-items: center; font-size: clamp(1rem, 4vmin, 2.5rem); color: var(--color-text-passive); background-color: var(--color-surface); cursor: pointer; user-select: none; transition: background-color 150ms, color 150ms, transform 100ms; }
         .grid-cell.selected { background-color: var(--color-accent-primary); color: var(--color-bg-primary) !important; transform: scale(1.1); }
         .grid-cell.found { background-color: var(--color-success) !important; color: var(--color-bg-primary) !important; }
         #wordListContainer { background-color: var(--color-surface); border: 2px solid var(--color-func); padding: var(--gap-m); width: clamp(220px, 30vw, 350px); height: 100%; overflow-y: auto; }
         #wordList { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: var(--gap-s); }
         #wordList li { font-size: clamp(1rem, 3vmin, 1.5rem); color: var(--color-text-bright); transition: color 220ms, text-decoration 220ms, opacity 220ms; text-align: left; }
         #wordList li.found { color: var(--color-success); text-decoration: line-through; opacity: 0.6; }
-
         @media (max-aspect-ratio: 1/1) {
             #holographic-panel { flex-direction: column; align-items: center; gap: var(--gap-m); width: 95%; height: auto; }
             #wordSearchGrid { width: 100%; height: auto; }
@@ -75,20 +77,33 @@
             
             <div id="profiles" class="window">
                 <header class="telemetry-header"><span>WORD SEARCH :: SELECT PROFILE</span></header>
-                <div class="window-content"><h2 >PERFILES DE USUARIO</h2><ul id="profilesList" class="menu-list"></ul><button id="goToPlayerCreateButton" class="interactive-button">CREAR NUEVO PERFIL</button></div>
-                <footer class="telemetry-footer">BUILD: v1.0.0-r9</footer>
+                <div class="window-content">
+                    <h2>PERFILES DE USUARIO</h2>
+                    <ul id="profilesList" class="menu-list"></ul>
+                    <button id="goToPlayerCreateButton" class="interactive-button">CREAR NUEVO PERFIL</button>
+                </div>
+                <footer class="telemetry-footer">BUILD: v1.0.0-r12</footer>
             </div>
 
             <div id="player" class="window">
                  <header class="telemetry-header"><span>WORD SEARCH :: CREATE PROFILE</span></header>
-                 <div class="window-content"><h2>NUEVO JUGADOR</h2><div id="playerNameDisplay">_</div><div id="virtualKeyboard"></div><button id="cancelPlayerButton" style="margin-top: var(--gap-m);">CANCELAR</button></div>
-                 <footer class="telemetry-footer">BUILD: v1.0.0-r9</footer>
+                 <div class="window-content">
+                    <h2>NUEVO JUGADOR</h2>
+                    <div id="playerNameDisplay">_</div>
+                    <div id="virtualKeyboard"></div>
+                    <button id="cancelPlayerButton" style="margin-top: var(--gap-m);">CANCELAR</button>
+                </div>
+                 <footer class="telemetry-footer">BUILD: v1.0.0-r12</footer>
             </div>
 
             <div id="mainMenu" class="window">
                 <header class="telemetry-header"><span>WORD SEARCH :: MAIN MENU</span></header>
-                <div class="window-content"><h2 id="mainMenuHeader"></h2><div id="levelGrid" class="menu-list"></div><button id="backToProfilesButton">CAMBIAR PERFIL</button></div>
-                <footer class="telemetry-footer">BUILD: v1.0.0-r9</footer>
+                <div class="window-content">
+                    <h2 id="mainMenuHeader"></h2>
+                    <div id="levelGrid" class="menu-list"></div>
+                    <button id="backToProfilesButton" style="margin-top:var(--gap-l);">CAMBIAR PERFIL</button>
+                </div>
+                <footer class="telemetry-footer">BUILD: v1.0.0-r12</footer>
             </div>
 
             <div id="game" class="window">
@@ -102,10 +117,15 @@
                         </div>
                     </div>
                 </div>
-                <footer class="telemetry-footer">BUILD: v1.0.0-r9</footer>
+                <footer class="telemetry-footer">BUILD: v1.0.0-r12</footer>
             </div>
 
-            <div id="victory" class="window"><h1>NIVEL COMPLETADO</h1><button id="victoryToMenuButton">VOLVER AL MENÚ</button></div>
+            <div id="victory" class="window">
+                <h1>NIVEL COMPLETADO</h1>
+                <div id="victoryRankProgress"></div>
+                <button id="victoryToMenuButton">CONTINUAR</button>
+            </div>
+
             <div id="fullscreenOverlay" class="window" style="z-index: 999; background-color: rgba(0,0,0,0.95);"><h2>MODO PANTALLA COMPLETA REQUERIDO</h2><button id="reEnterFullscreenButton">REACTIVAR</button></div>
         </main>
     </div>
@@ -114,14 +134,15 @@
     'use strict';
     function createEventBus() { var l={}; return { on:function(e,t){(l[e]=l[e]||[]).push(t)},off:function(e,t){l[e]&&(l[e]=l[e].filter(function(l){return l!==t}))},emit:function(e,t){l[e]&&l[e].forEach(function(l){l(t)})} }; }
     var EventBus = createEventBus();
-    var state = { currentWindow: 'preload', activeProfile: null, profiles: {}, newPlayerName: '', isShiftActive: false, game: { isOver: false, isSelecting: false, selection: [], foundWords: [], activePuzzle: null } };
+    var state = { currentWindow: 'preload', activeProfile: null, profiles: {}, newPlayerName: '', isShiftActive: false, game: { isOver: false, isSelecting: false, selection: [], foundWords: [], activePuzzle: null, promoted: false, lastDifficulty: null } };
     var windows = { preload: document.getElementById('preload'), title: document.getElementById('title'), profiles: document.getElementById('profiles'), player: document.getElementById('player'), mainMenu: document.getElementById('mainMenu'), game: document.getElementById('game'), victory: document.getElementById('victory'), fullscreenOverlay: document.getElementById('fullscreenOverlay') };
     var ui = {
         profilesList: document.getElementById('profilesList'), goToPlayerCreateButton: document.getElementById('goToPlayerCreateButton'),
         playerNameDisplay: document.getElementById('playerNameDisplay'), virtualKeyboard: document.getElementById('virtualKeyboard'), cancelPlayerButton: document.getElementById('cancelPlayerButton'),
         mainMenuHeader: document.getElementById('mainMenuHeader'), levelGrid: document.getElementById('levelGrid'), backToProfilesButton: document.getElementById('backToProfilesButton'),
         gameHeaderTitle: document.getElementById('gameHeaderTitle'), wordSearchGrid: document.getElementById('wordSearchGrid'), wordList: document.getElementById('wordList'),
-        victoryToMenuButton: document.getElementById('victoryToMenuButton'), reEnterFullscreenButton: document.getElementById('reEnterFullscreenButton'), holographicPanel: document.getElementById('holographic-panel')
+        victoryToMenuButton: document.getElementById('victoryToMenuButton'), reEnterFullscreenButton: document.getElementById('reEnterFullscreenButton'), holographicPanel: document.getElementById('holographic-panel'),
+        victoryRankProgress: document.getElementById('victoryRankProgress')
     };
     var PROFILES_KEY = 'ws-profiles';
     var PLAYER_KEYBOARD_LAYOUT = ['Q','W','E','R','T','Y','U','Backspace','A','S','D','F','G','H','Enter','I','J','K','L','M','Ñ','O','P','Shift','Z','X','C','V','B','N'];
@@ -131,13 +152,47 @@
         dificil: ['ALGORITMO', 'COMPILAR', 'VARIABLE', 'CONSTANTE', 'DEPURADOR', 'RECURSIVO']
     };
     var DIRECTIONS = [{f:'H',x:1,y:0},{f:'V',x:0,y:1},{f:'D',x:1,y:1},{f:'HI',x:-1,y:0},{f:'VI',x:0,y:-1},{f:'DI',x:-1,y:-1},{f:'DA',x:1,y:-1},{f:'DAI',x:-1,y:1}];
-    function saveProfiles() { try { localStorage.setItem(PROFILES_KEY, JSON.stringify(state.profiles)); } catch(e) { console.error("Failed to save profiles", e); } }
-    function loadProfiles() { try { var p = JSON.parse(localStorage.getItem(PROFILES_KEY)); if (p) { state.profiles = p; } } catch (e) { state.profiles = {}; } }
+    var RANKS = [ { name: 'RECLUTA', glyph: '›' }, { name: 'PRIVADO', glyph: '▲' }, { name: 'CORPORAL', glyph: '◆' }, { name: 'SARGENTO', glyph: '☰' }, { name: 'TENIENTE', glyph: '★' }, { name: 'CAPITÁN', glyph: '✪' }, { name: 'MAYOR', glyph: '❂' }, { name: 'CORONEL', glyph: '⚜' }, { name: 'GENERAL', glyph: '⚶' }, { name: 'MARISCAL', glyph: '✠' }];
+
+    function saveProfiles() { try { localStorage.setItem(PROFILES_KEY, JSON.stringify(state.profiles)); } catch(e) {} }
+    function loadProfiles() {
+        try {
+            var p = JSON.parse(localStorage.getItem(PROFILES_KEY));
+            if (p) {
+                Object.keys(p).forEach(function(name) {
+                    if (!p[name].ranks) p[name].ranks = { facil: 0, medio: 0, dificil: 0 };
+                    if (!p[name].repetitions) p[name].repetitions = { facil: 0, medio: 0, dificil: 0 };
+                    if (!p[name].solvedWords) p[name].solvedWords = { facil: [], medio: [], dificil: [] };
+                });
+                state.profiles = p;
+            }
+        } catch (e) { state.profiles = {}; }
+    }
     function showWindow(id) { for (var k in windows) { if(windows[k]) windows[k].classList.remove('active'); } if(windows[id]) windows[id].classList.add('active'); state.currentWindow = id; }
     function fisherYatesShuffle(a){var m=a.length,t,i;while(m){i=Math.floor(Math.random()*m--);t=a[m];a[m]=a[i];a[i]=t}return a}
-    function renderProfiles() { if(!ui.profilesList) return; ui.profilesList.innerHTML = ''; Object.keys(state.profiles).forEach(function(name) { var li = document.createElement('li'); var btn = document.createElement('button'); btn.textContent = name; btn.className = 'interactive-button'; btn.dataset.profileName = name; li.appendChild(btn); ui.profilesList.appendChild(li); }); }
-    function renderPlayerKeyboard() { if(!ui.virtualKeyboard) return; ui.virtualKeyboard.innerHTML = ''; PLAYER_KEYBOARD_LAYOUT.forEach(function(k) { var btn = document.createElement('button'); btn.className = 'interactive-button'; var t = k; if(k === 'Backspace') t='←'; if(k === 'Enter') t='↵'; if(k === 'Shift') t='⇧'; btn.textContent = t; btn.dataset.key = k; ui.virtualKeyboard.appendChild(btn); }); }
-    function populateLevelGrid() { if(!ui.levelGrid) return; ui.levelGrid.innerHTML = ''; Object.keys(WORD_LISTS).forEach(function(diff) { var btn = document.createElement('button'); btn.className = 'interactive-button'; btn.textContent = 'NIVEL ' + diff.toUpperCase(); btn.dataset.difficulty = diff; ui.levelGrid.appendChild(btn); }); }
+    function renderProfiles() { ui.profilesList.innerHTML = ''; Object.keys(state.profiles).forEach(function(name) { var li = document.createElement('li'); var btn = document.createElement('button'); btn.textContent = name; btn.className = 'interactive-button'; btn.dataset.profileName = name; li.appendChild(btn); ui.profilesList.appendChild(li); }); }
+    function renderPlayerKeyboard() { ui.virtualKeyboard.innerHTML = ''; PLAYER_KEYBOARD_LAYOUT.forEach(function(k) { var btn = document.createElement('button'); btn.className = 'interactive-button'; var t = k; if(k === 'Backspace') t='←'; if(k === 'Enter') t='↵'; if(k === 'Shift') t='⇧'; btn.textContent = t; btn.dataset.key = k; ui.virtualKeyboard.appendChild(btn); }); }
+    
+    function renderMainMenu() {
+        if(!ui.levelGrid || !state.activeProfile) return;
+        var profile = state.profiles[state.activeProfile];
+        ui.mainMenuHeader.textContent = 'JUGADOR: ' + state.activeProfile;
+        ui.levelGrid.innerHTML = '';
+        Object.keys(WORD_LISTS).forEach(function(diff) {
+            var rankIndex = profile.ranks[diff]; var rank = RANKS[rankIndex]; var reps = profile.repetitions[diff];
+            var card = document.createElement('button'); card.className = 'interactive-button level-card'; card.dataset.difficulty = diff;
+            var glyphEl = document.createElement('span'); glyphEl.className = 'rank-glyph'; glyphEl.textContent = rank.glyph;
+            var infoEl = document.createElement('div'); infoEl.className = 'level-info';
+            var levelNameEl = document.createElement('span'); levelNameEl.className = 'level-name'; levelNameEl.textContent = 'NIVEL ' + diff.toUpperCase();
+            var rankNameEl = document.createElement('span'); rankNameEl.className = 'rank-name'; rankNameEl.textContent = rank.name;
+            infoEl.appendChild(levelNameEl); infoEl.appendChild(rankNameEl);
+            var repsEl = document.createElement('div'); repsEl.className = 'repetition-container';
+            for (var i = 0; i < 3; i++) { var box = document.createElement('div'); box.className = 'repetition-box' + (i < reps ? ' filled' : ''); repsEl.appendChild(box); }
+            card.appendChild(glyphEl); card.appendChild(infoEl); card.appendChild(repsEl);
+            ui.levelGrid.appendChild(card);
+        });
+    }
+
     function generarNivelSopaDeLetras(difficulty) {
         var config = { facil: { size: 10, words: 5 }, medio: { size: 12, words: 6 }, dificil: { size: 14, words: 7 } }[difficulty];
         var grid = Array(config.size).fill(0).map(function() { return Array(config.size).fill(null); });
@@ -160,28 +215,17 @@
         for (var y = 0; y < config.size; y++) { for (var x = 0; x < config.size; x++) { if (grid[y][x] === null) { grid[y][x] = 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ'[Math.floor(Math.random() * 27)]; } } }
         return { grid: grid, words: placedWords, size: config.size };
     }
+
     var GameManager = {
         startGame: function(difficulty) {
-            state.game.isOver = false; state.game.foundWords = []; state.game.difficulty = difficulty;
+            state.game.isOver = false; state.game.foundWords = []; state.game.difficulty = difficulty; state.game.promoted = false;
             state.game.activePuzzle = generarNivelSopaDeLetras(difficulty);
             this.renderGrid(); this.renderWordList();
             ui.gameHeaderTitle.textContent = 'JUGADOR :: ' + state.activeProfile;
             EventBus.emit('system:requestNavigation', { windowId: 'game' });
         },
-        renderGrid: function() {
-            var puzzle = state.game.activePuzzle;
-            ui.wordSearchGrid.innerHTML = '';
-            ui.wordSearchGrid.style.setProperty('--grid-size', puzzle.size);
-            puzzle.grid.forEach(function(row, y) {
-                row.forEach(function(letter, x) {
-                    var cell = document.createElement('div');
-                    cell.className = 'grid-cell'; cell.textContent = letter;
-                    cell.dataset.x = x; cell.dataset.y = y;
-                    ui.wordSearchGrid.appendChild(cell);
-                });
-            });
-        },
-        renderWordList: function() { var puzzle = state.game.activePuzzle; var profile = state.profiles[state.activeProfile]; if (!profile.solvedWords) profile.solvedWords = { facil: [], medio: [], dificil: [] }; var showHints = profile.solvedWords[state.game.difficulty].length < 3; var dirMap = {H:'→',V:'↓',D:'↘',HI:'←',VI:'↑',DI:'↖',DA:'↗',DAI:'↙'}; ui.wordList.innerHTML = ''; puzzle.words.forEach(function(wordData) { var li = document.createElement('li'); var hint = showHints ? (dirMap[wordData.direction] || '') + ' ' : ''; li.textContent = hint + wordData.text; li.dataset.word = wordData.text; ui.wordList.appendChild(li); }); },
+        renderGrid: function() { var puzzle = state.game.activePuzzle; ui.wordSearchGrid.innerHTML = ''; ui.wordSearchGrid.style.setProperty('--grid-size', puzzle.size); puzzle.grid.forEach(function(row, y) { row.forEach(function(letter, x) { var cell = document.createElement('div'); cell.className = 'grid-cell'; cell.textContent = letter; cell.dataset.x = x; cell.dataset.y = y; ui.wordSearchGrid.appendChild(cell); }); }); },
+        renderWordList: function() { var puzzle = state.game.activePuzzle; var profile = state.profiles[state.activeProfile]; var showHints = profile.repetitions[state.game.difficulty] < 3 && profile.ranks[state.game.difficulty] === 0; var dirMap = {H:'→',V:'↓',D:'↘',HI:'←',VI:'↑',DI:'↖',DA:'↗',DAI:'↙'}; ui.wordList.innerHTML = ''; puzzle.words.forEach(function(wordData) { var li = document.createElement('li'); var hint = showHints ? (dirMap[wordData.direction] || '') + ' ' : ''; li.textContent = hint + wordData.text; li.dataset.word = wordData.text; ui.wordList.appendChild(li); }); },
         handleSelectionEnd: function() {
             if (state.game.selection.length < 2) return;
             var selectedString = state.game.selection.map(function(cell) { return cell.textContent; }).join('');
@@ -196,58 +240,55 @@
         },
         checkGameState: function() {
             if (state.game.foundWords.length === state.game.activePuzzle.words.length) {
-                state.game.isOver = true; var profile = state.profiles[state.activeProfile]; var puzzleId = state.game.activePuzzle.words.map(function(w){return w.text}).sort().join(',');
-                if (!profile.solvedWords[state.game.difficulty].includes(puzzleId)) { profile.solvedWords[state.game.difficulty].push(puzzleId); }
+                state.game.isOver = true; var profile = state.profiles[state.activeProfile]; var difficulty = state.game.difficulty;
+                profile.repetitions[difficulty]++;
+                if (profile.repetitions[difficulty] >= 3) {
+                    if (profile.ranks[difficulty] < RANKS.length - 1) { profile.ranks[difficulty]++; state.game.promoted = true; }
+                    profile.repetitions[difficulty] = 0;
+                }
+                state.game.lastDifficulty = difficulty;
+                var puzzleId = state.game.activePuzzle.words.map(function(w){return w.text}).sort().join(','); if (!profile.solvedWords[difficulty].includes(puzzleId)) { profile.solvedWords[difficulty].push(puzzleId); }
                 saveProfiles(); setTimeout(function(){ EventBus.emit('game:victory'); }, 500);
             }
         },
         clearSelectionUI: function() { document.querySelectorAll('.grid-cell.selected').forEach(function(c) { c.classList.remove('selected'); }); }
     };
+    function renderVictoryProgress() {
+        var profile = state.profiles[state.activeProfile]; var difficulty = state.game.lastDifficulty; ui.victoryRankProgress.innerHTML = '';
+        if (state.game.promoted) {
+            var newRank = RANKS[profile.ranks[difficulty]];
+            ui.victoryRankProgress.innerHTML = '<h2 class="promotion-title">¡ASCENDIDO!</h2><p>NUEVO RANGO ('+difficulty.toUpperCase()+'): ' + newRank.glyph + ' ' + newRank.name + '</p>';
+        } else {
+            var reps = profile.repetitions[difficulty];
+            ui.victoryRankProgress.innerHTML = '<p>PROGRESO ('+difficulty.toUpperCase()+'): ' + reps + ' / 3</p>';
+        }
+    }
     document.addEventListener('DOMContentLoaded', function() {
-        loadProfiles(); renderProfiles(); populateLevelGrid(); renderPlayerKeyboard();
+        loadProfiles(); renderProfiles(); renderPlayerKeyboard();
         var initialKeyListener = function() { showWindow('profiles'); };
         windows.title.addEventListener('click', initialKeyListener, { once: true });
         document.addEventListener('keydown', initialKeyListener, { once: true });
         ui.goToPlayerCreateButton.addEventListener('click', function(){ showWindow('player'); });
         ui.cancelPlayerButton.addEventListener('click', function(){ showWindow('profiles'); });
-        ui.backToProfilesButton.addEventListener('click', function(){ showWindow('profiles'); });
-        ui.victoryToMenuButton.addEventListener('click', function(){ showWindow('mainMenu'); });
-        ui.profilesList.addEventListener('click', function(e) { var name = e.target.dataset.profileName; if (name) { state.activeProfile = name; ui.mainMenuHeader.textContent = 'JUGADOR: ' + name; showWindow('mainMenu'); } });
+        ui.backToProfilesButton.addEventListener('click', function(){ showWindow('mainMenu'); renderMainMenu(); }); // Regresamos al menu principal
+        ui.victoryToMenuButton.addEventListener('click', function(){ showWindow('mainMenu'); renderMainMenu(); });
+        ui.profilesList.addEventListener('click', function(e) { var name = e.target.dataset.profileName; if (name) { state.activeProfile = name; showWindow('mainMenu'); renderMainMenu(); } });
         ui.virtualKeyboard.addEventListener('click', function(e) {
             var key = e.target.dataset.key; if(!key) return;
-            if (key === 'Enter') { var name = state.newPlayerName.trim(); if (name && !state.profiles[name]) { state.profiles[name] = { solvedWords: { facil: [], medio: [], dificil: [] } }; saveProfiles(); renderProfiles(); state.newPlayerName = ''; ui.playerNameDisplay.textContent = '_'; showWindow('profiles'); }
+            if (key === 'Enter') { var name = state.newPlayerName.trim(); if (name && !state.profiles[name]) { state.profiles[name] = { solvedWords: { facil: [], medio: [], dificil: [] }, ranks: { facil: 0, medio: 0, dificil: 0 }, repetitions: { facil: 0, medio: 0, dificil: 0 } }; saveProfiles(); renderProfiles(); state.newPlayerName = ''; ui.playerNameDisplay.textContent = '_'; showWindow('profiles'); }
             } else if (key === 'Backspace') { state.newPlayerName = state.newPlayerName.slice(0, -1);
             } else if (key !== 'Shift') { if(state.newPlayerName.length < 12) state.newPlayerName += key; }
             ui.playerNameDisplay.textContent = state.newPlayerName || '_';
         });
-        ui.levelGrid.addEventListener('click', function(e) { var diff = e.target.dataset.difficulty; if (diff && state.activeProfile) { GameManager.startGame(diff); } });
+        ui.levelGrid.addEventListener('click', function(e) { var card = e.target.closest('.level-card'); var diff = card ? card.dataset.difficulty : null; if (diff && state.activeProfile) { GameManager.startGame(diff); } });
         ui.wordSearchGrid.addEventListener('mousedown', function(e) { if(e.target.classList.contains('grid-cell')){ state.game.isSelecting = true; GameManager.clearSelectionUI(); state.game.selection = [e.target]; e.target.classList.add('selected'); } });
-        ui.wordSearchGrid.addEventListener('mouseover', function(e) {
-            if (state.game.isSelecting && e.target.classList.contains('grid-cell')) {
-                GameManager.clearSelectionUI();
-                var startCell = state.game.selection[0], endCell = e.target;
-                var startX = parseInt(startCell.dataset.x), startY = parseInt(startCell.dataset.y);
-                var endX = parseInt(endCell.dataset.x), endY = parseInt(endCell.dataset.y);
-                var dx = Math.sign(endX - startX), dy = Math.sign(endY - startY);
-                if (Math.abs(endX - startX) !== Math.abs(endY - startY) && (startX !== endX && startY !== endY)) return;
-                state.game.selection = [startCell];
-                var currX = startX, currY = startY;
-                while (currX !== endX || currY !== endY) { currX += dx; currY += dy; var nextCell = ui.wordSearchGrid.querySelector('[data-x="' + currX + '"][data-y="' + currY + '"]'); if(nextCell) state.game.selection.push(nextCell); }
-                state.game.selection.forEach(function(cell) { cell.classList.add('selected'); });
-            }
-        });
+        ui.wordSearchGrid.addEventListener('mouseover', function(e) { if (state.game.isSelecting && e.target.classList.contains('grid-cell')) { GameManager.clearSelectionUI(); var startCell = state.game.selection[0], endCell = e.target; var startX = parseInt(startCell.dataset.x), startY = parseInt(startCell.dataset.y); var endX = parseInt(endCell.dataset.x), endY = parseInt(endCell.dataset.y); var dx = Math.sign(endX - startX), dy = Math.sign(endY - startY); if (Math.abs(endX - startX) !== Math.abs(endY - startY) && (startX !== endX && startY !== endY)) return; state.game.selection = [startCell]; var currX = startX, currY = startY; while (currX !== endX || currY !== endY) { currX += dx; currY += dy; var nextCell = ui.wordSearchGrid.querySelector('[data-x="' + currX + '"][data-y="' + currY + '"]'); if(nextCell) state.game.selection.push(nextCell); } state.game.selection.forEach(function(cell) { cell.classList.add('selected'); }); } });
         document.body.addEventListener('mouseup', function() { if (state.game.isSelecting) { state.game.isSelecting = false; GameManager.handleSelectionEnd(); setTimeout(GameManager.clearSelectionUI, 200); } });
-        document.body.addEventListener('mousemove', function(e) {
-            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-            var x = (e.clientX / window.innerWidth) - 0.5, y = (e.clientY / window.innerHeight) - 0.5;
-            if(ui.holographicPanel) ui.holographicPanel.style.transform = 'rotateX(' + (10 + (y * -5)) + 'deg) rotateY(' + (x * 5) + 'deg)';
-            document.body.style.setProperty('--grid-x', (-x * 20) + 'px');
-            document.body.style.setProperty('--grid-y', (-y * 20) + 'px');
-        });
-        EventBus.on('system:requestNavigation', function(d) { if(d.windowId) showWindow(d.windowId); });
-        EventBus.on('game:victory', function() { showWindow('victory'); });
+        document.body.addEventListener('mousemove', function(e) { if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return; var x = (e.clientX / window.innerWidth) - 0.5, y = (e.clientY / window.innerHeight) - 0.5; if(ui.holographicPanel) ui.holographicPanel.style.transform = 'rotateX(' + (10 + (y * -5)) + 'deg) rotateY(' + (x * 5) + 'deg)'; document.body.style.setProperty('--grid-x', (-x * 20) + 'px'); document.body.style.setProperty('--grid-y', (-y * 20) + 'px'); });
+        EventBus.on('system:requestNavigation', function(d) { if(d.windowId === 'mainMenu') renderMainMenu(); if(d.windowId) showWindow(d.windowId); });
+        EventBus.on('game:victory', function() { renderVictoryProgress(); showWindow('victory'); });
         setTimeout(function() { showWindow('title'); }, 1000);
-        console.log("Sistema WORD SEARCH v1.0.0-r9 estable inicializado.");
+        console.log("Sistema WORD SEARCH v1.0.0-r12 estable inicializado.");
     });
 })();
 </script>
