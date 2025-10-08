@@ -3,28 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WORD SEARCH v1.0.0 (r24 - STABLE)</title>
+    <title>WORD SEARCH v1.5.0 (r31-STABLE)</title>
     <style>
         :root {
-            --color-bg-primary: #0A0A0A; --color-surface: #141414; --color-func: #2A2A2A; --color-text-passive: #B0B0B0; --color-text-bright: #FFFFFF; --color-accent-primary: #00FFFF; --color-accent-primary-glow: rgba(0, 255, 255, 0.4); --color-accent-bios: #00FF8A; --color-error: #FF414B; --color-success: #39FF14; --color-accent-gold: #FFD700;
-            --gap-s: clamp(4px, 1vmin, 8px);
-            --gap-m: clamp(8px, 2vmin, 16px);
-            --gap-l: clamp(16px, 4vmin, 32px);
-            --key-size: clamp(30px, min(10vw, 10vh), 65px);
+            --color-bg-primary: #0A0A0A; --color-surface: #141414; --color-func: #2A2A2A;
+            --color-text-passive: #B0B0B0; --color-text-bright: #FFFFFF; --color-accent-primary: #00FFFF;
+            --color-accent-primary-glow: rgba(0, 255, 255, 0.4); --color-error: #FF414B;
+            --color-success: #39FF14; --color-accent-gold: #FFD700; --color-found: #006B6B;
+            --gap-s: clamp(4px, 1vmin, 8px); --gap-m: clamp(8px, 2vmin, 16px); --gap-l: clamp(16px, 4vmin, 32px);
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         html { height: 100%; font-size: clamp(10px, 2.5vmin, 22px); }
-        body { width: 100%; height: 100%; overflow: hidden; background-color: var(--color-bg-primary); color: var(--color-text-bright); font-family: Consolas, Menlo, Courier New, monospace; font-size: 1rem; position: relative; }
+        body { width: 100%; height: 100%; overflow: hidden; background: var(--color-bg-primary); color: var(--color-text-bright); font-family: Consolas, Menlo, Courier New, monospace; font-size: 1rem; position: relative; }
         #perspective-container { perspective: 1200px; width: 100%; height: 100%; position: relative; }
         body::after { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(0,0,0,0.5) 0px, rgba(0,0,0,0.4) 1px, transparent 2px, transparent 3px); z-index: 10; animation: scanline-scroll 20s linear infinite; }
         @keyframes scanline-scroll { to { background-position-y: 100%; } }
-        body::before {
-            --grid-size: 40px; --grid-x: 0px; --grid-y: 0px;
-            content: ""; position: absolute; top: -10%; left: -10%; width: 120%; height: 120%; pointer-events: none;
-            background-image: linear-gradient(var(--color-surface) 1px, transparent 1px), linear-gradient(90deg, var(--color-surface) 1px, transparent 1px);
-            background-size: var(--grid-size) var(--grid-size); background-position: var(--grid-x) var(--grid-y);
-            opacity: 0.05; z-index: -1; transition: background-position 0.2s linear;
-        }
+        body::before { --grid-size: 40px; --grid-x: 0px; --grid-y: 0px; content: ""; position: absolute; top: -10%; left: -10%; width: 120%; height: 120%; pointer-events: none; background-image: linear-gradient(var(--color-surface) 1px, transparent 1px), linear-gradient(90deg, var(--color-surface) 1px, transparent 1px); background-size: var(--grid-size) var(--grid-size); background-position: var(--grid-x) var(--grid-y); opacity: 0.05; z-index: -1; transition: background-position 0.2s linear; }
         main { width: 100%; height: 100%; position: absolute; top: 0; left: 0; transform-style: preserve-3d; }
         .window { width: 100%; height: 100%; padding: var(--gap-m) var(--gap-l); position: absolute; top: 0; left: 0; display: flex; flex-direction: column; justify-content: space-between; align-items: center; text-align: center; opacity: 0; transform: translateZ(-200px); pointer-events: none; visibility: hidden; transition: opacity 300ms ease-out, transform 300ms ease-out, visibility 300ms; }
         .window.active { opacity: 1; transform: translateZ(0px); pointer-events: auto; visibility: visible; }
@@ -32,66 +26,69 @@
         #preload, #title { justify-content: center; }
         h1 { font-size: clamp(2rem, 10vmin, 5rem); color: var(--color-accent-primary); letter-spacing: clamp(4px, 1vmin, 8px); text-shadow: 0 0 5px var(--color-accent-primary), 0 0 15px var(--color-accent-primary), 0 0 25px var(--color-accent-primary); max-width: 100%; word-break: break-word; }
         h2 { font-size: clamp(1.2rem, 4vmin, 1.8rem); color: var(--color-text-bright); margin-bottom: var(--gap-m); }
-        h3 { font-size: clamp(1rem, 3.5vmin, 1.5rem); color: var(--color-accent-primary); margin-bottom: var(--gap-m); border-bottom: 1px solid var(--color-func); padding-bottom: var(--gap-m); text-align: left; width: 100%;}
-        .interactive-button, button { background-color: var(--color-func); border: 2px solid var(--color-surface); color: var(--color-text-bright); padding: var(--gap-s) var(--gap-m); font-family: inherit; font-size: clamp(0.9rem, 2.5vmin, 1.2rem); cursor: pointer; text-transform: uppercase; transition: background-color 220ms, border-color 220ms, color 220ms, opacity 220ms, transform 220ms; flex-shrink: 0; }
-        .interactive-button:hover, button:hover { background-color: var(--color-surface); border-color: var(--color-accent-primary); }
-        .interactive-button:disabled { background-color: #1a1a1a; border-color: #111; color: #444; cursor: not-allowed; }
+        .interactive-button, button { background: var(--color-func); border: 2px solid var(--color-surface); color: var(--color-text-bright); padding: var(--gap-s) var(--gap-m); font-family: inherit; font-size: clamp(0.9rem, 2.5vmin, 1.2rem); cursor: pointer; text-transform: uppercase; transition: background 220ms, border-color 220ms, color 220ms, opacity 220ms, transform 220ms; flex-shrink: 0; }
+        .interactive-button:hover, button:hover { background: var(--color-surface); border-color: var(--color-accent-primary); }
+        .interactive-button:disabled { background: #1a1a1a; border-color: #111; color: #444; cursor: not-allowed; }
         .telemetry-header, .telemetry-footer { width: 100%; flex-shrink: 0; text-transform: uppercase; color: var(--color-text-passive); font-size: clamp(0.7rem, 2vmin, 0.9rem); letter-spacing: 2px; }
-        .telemetry-header { display: flex; justify-content: space-between; align-items: center; padding: var(--gap-s); border-bottom: 1px solid var(--color-surface); }
+        .telemetry-header { display: flex; justify-content: space-between; align-items: center; padding: var(--gap-s); border-bottom: 1px solid var(--color-surface); position: relative; }
         .telemetry-footer { padding: var(--gap-s); border-top: 1px solid var(--color-surface); }
-        
         .menu-list { display: flex; flex-direction: column; gap: var(--gap-m); width: clamp(320px, 80vw, 800px); }
         #profilesList { list-style: none; }
         .profile-entry { display: flex; gap: var(--gap-s); align-items: center; width: 100%; }
         .profile-button { flex-grow: 1; text-align: left; }
-        .delete-button { flex-shrink: 0; background-color: var(--color-error); border-color: #8B0000; width: 44px; height: 44px; font-size: 1.2rem; padding: 0; }
-
-        #playerNameDisplay { width: calc(var(--key-size) * 8 + var(--gap-s) * 7); height: calc(var(--key-size) * 1.2); font-size: calc(var(--key-size) * 0.6); background-color: var(--color-surface); border: 2px solid var(--color-func); color: var(--color-accent-primary); display: flex; justify-content: center; align-items: center; letter-spacing: 4px; margin-bottom: var(--gap-m); }
-        #virtualKeyboard { display: grid; grid-template-columns: repeat(8, var(--key-size)); grid-template-rows: repeat(4, var(--key-size)); gap: var(--gap-s); }
-        
+        .delete-button { flex-shrink: 0; background: var(--color-error); border-color: #8B0000; width: 44px; height: 44px; font-size: 1.2rem; padding: 0; }
         .level-card { width: 100%; display: flex; align-items: center; justify-content: space-between; padding: var(--gap-s) var(--gap-m); text-align: left; }
-        .rank-badge { width: clamp(50px, 12vmin, 70px); aspect-ratio: 1 / 1.2; margin-right: var(--gap-m); background: var(--color-accent-gold); clip-path: polygon(0% 0%, 100% 0%, 100% 80%, 50% 100%, 0% 80%); padding: 2px; }
+        .rank-badge { width: clamp(50px, 12vmin, 70px); aspect-ratio: 1 / 1.2; margin-right: var(--gap-m); background: var(--color-accent-gold); clip-path: polygon(0% 0%, 100% 0%, 100% 80%, 50% 100%, 0% 80%); padding: 2px; animation: rank-glow 3s ease-in-out infinite; }
+        @keyframes rank-glow { 50% { filter: drop-shadow(0 0 8px var(--color-accent-gold)); } }
         .rank-glyph { width: 100%; height: 100%; background: var(--color-surface); clip-path: polygon(0% 0%, 100% 0%, 100% 80%, 50% 100%, 0% 80%); display: flex; align-items: center; justify-content: center; font-size: clamp(1.8rem, 8vmin, 2.8rem); color: var(--color-accent-gold); text-shadow: 0 0 8px var(--color-accent-gold); }
         .level-card .level-info { flex-grow: 1; }
         .level-card .level-name { font-size: clamp(1rem, 3.5vmin, 1.6rem); color: var(--color-text-bright); display: block; }
         .level-card .rank-name { font-size: clamp(0.8rem, 2.5vmin, 1.1rem); color: var(--color-text-passive); display: block; }
         .level-card .repetition-container { display: flex; gap: var(--gap-s); margin-left: var(--gap-m); }
-        .repetition-box { width: clamp(16px, 4vmin, 24px); height: clamp(16px, 4vmin, 24px); border: 2px solid var(--color-func); background-color: transparent; transition: background-color 300ms; }
-        .repetition-box.filled { background-color: var(--color-accent-primary); }
-
+        .repetition-box { width: clamp(16px, 4vmin, 24px); height: clamp(16px, 4vmin, 24px); border: 2px solid var(--color-func); background: transparent; transition: background 300ms; }
+        .repetition-box.filled { background: var(--color-accent-primary); }
         #victoryRankProgress { margin: var(--gap-l) 0; }
         .promotion-title { font-size: 1.5rem; color: var(--color-accent-gold); text-shadow: 0 0 10px var(--color-accent-gold); }
-
         #holographic-panel { display: flex; flex-direction: row; flex-wrap: nowrap; align-items: stretch; justify-content: center; gap: var(--gap-l); transform-style: preserve-3d; transform: rotateX(10deg); filter: drop-shadow(0 0 15px var(--color-accent-primary-glow)); width: auto; max-width: 95%; height: 85%; }
-        #wordSearchGrid { display: grid; gap: 4px; background-color: rgba(0,0,0,0.2); padding: var(--gap-s); border: 2px solid var(--color-func); touch-action: none; height: 100%; aspect-ratio: 1 / 1; grid-template-columns: repeat(var(--grid-size, 10), 1fr); }
-        .grid-cell { display: flex; justify-content: center; align-items: center; font-size: clamp(1rem, 4vmin, 2.5rem); color: var(--color-text-passive); background-color: var(--color-surface); cursor: pointer; user-select: none; transition: background-color 150ms, color 150ms, transform 100ms; }
-        .grid-cell.selected { background-color: var(--color-accent-primary); color: var(--color-bg-primary) !important; transform: scale(1.1); }
-        .grid-cell.found { background-color: var(--color-success) !important; color: var(--color-bg-primary) !important; transition: background-color 1s, color 1s; }
-        .grid-cell.found.inactive { background-color: var(--color-func) !important; color: #444 !important; }
-        .grid-cell.hint { animation: hint-pulse 0.8s 2; }
+        #wordSearchGrid { display: grid; gap: 4px; background: rgba(0,0,0,0.2); padding: var(--gap-s); border: 2px solid var(--color-func); touch-action: none; height: 100%; aspect-ratio: 1 / 1; grid-template-columns: repeat(var(--grid-size, 10), 1fr); }
+        .grid-cell { display: flex; justify-content: center; align-items: center; font-size: clamp(1rem, 4vmin, 2.5rem); color: var(--color-text-passive); background: var(--color-surface); cursor: pointer; user-select: none; transition: background 150ms, color 150ms, transform 100ms; }
+        .grid-cell.selected { background: var(--color-accent-primary); color: var(--color-bg-primary) !important; transform: scale(1.1); }
+        .grid-cell.found { background: var(--color-found) !important; transition: background 1s; }
+        .grid-cell.found.inactive { background: var(--color-found) !important; }
         .grid-cell.error { animation: cell-error-flash 300ms ease-in-out; }
-        @keyframes hint-pulse { 50% { background-color: var(--color-accent-gold); color: var(--color-bg-primary); } }
-        @keyframes cell-error-flash { 50% { background-color: var(--color-error); } }
-        
-        #wordListContainer { background-color: var(--color-surface); border: 2px solid var(--color-func); padding: var(--gap-m); width: clamp(220px, 30vw, 350px); height: 100%; display: flex; flex-direction: column;}
+        @keyframes cell-error-flash { 50% { background: var(--color-error); } }
+        .grid-cell.hint { animation: hint-pulse 0.6s ease-in-out 2; }
+        @keyframes hint-pulse { 0%,100% { box-shadow: inset 0 0 0 2px var(--color-accent-primary-glow); } 50% { box-shadow: inset 0 0 0 4px var(--color-accent-primary); } }
+        #wordListContainer { background: var(--color-surface); border: 2px solid var(--color-func); padding: var(--gap-m); width: clamp(220px, 30vw, 350px); height: 100%; display: flex; flex-direction: column;}
         #wordList { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: var(--gap-s); flex-grow: 1; }
-        #wordList li { font-size: clamp(0.9rem, 2.8vmin, 1.4rem); color: var(--color-text-bright); transition: all 220ms; text-align: left; padding: var(--gap-s); border: 1px solid transparent; }
         #wordList li.found { color: var(--color-text-passive); text-decoration: line-through; opacity: 0.5; }
         #wordList li.active-word { color: var(--color-accent-gold); border-color: var(--color-accent-gold); box-shadow: 0 0 10px var(--color-accent-gold); }
-
         #game-hud { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-top: var(--gap-m); }
         #word-timer { font-size: 2rem; color: var(--color-accent-gold); }
-        
-        #shopGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--gap-m); width: 100%; max-width: 800px; }
-        .shop-item { background-color: var(--color-surface); border: 2px solid var(--color-func); padding: var(--gap-m); }
-        .shop-item .cost { color: var(--color-accent-gold); margin: var(--gap-m) 0; }
-        
-        @media (max-aspect-ratio: 1/1) {
-            #holographic-panel { flex-direction: column; align-items: center; gap: var(--gap-m); width: 95%; height: auto; }
-            #wordSearchGrid { width: 100%; height: auto; }
-            #wordListContainer { width: 100%; max-width: 600px; height: clamp(150px, 25vh, 200px); order: 2; }
-        }
-    </style>
+        #settingsGear { position: absolute; top: var(--gap-s); right: var(--gap-s); background: transparent; border: 1px solid var(--color-accent-primary); color: var(--color-accent-primary); font-size: 1.2rem; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 20; transition: transform 300ms, background 300ms; }
+        #settingsGear:hover { background: var(--color-accent-primary-glow); transform: rotate(90deg); }
+        #settings { z-index: 30; }
+        #settingsPanel { background: var(--color-surface); border: 2px solid var(--color-accent-primary); padding: var(--gap-l); width: clamp(300px, 90vw, 700px); max-height: 80vh; overflow-y: auto; display: flex; flex-direction: column; gap: var(--gap-m); }
+        #settingsPanel h2 { margin-bottom: var(--gap-m); }
+        .settings-row { display: flex; justify-content: space-between; align-items: center; gap: var(--gap-m); }
+        .settings-row label { flex-shrink: 0; }
+        .two-column { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap-m); }
+        .rank-cell { display: flex; align-items: center; gap: var(--gap-s); }
+        .rank-cell .rank-glyph { width: 30px; height: 30px; font-size: 1.2rem; }
+        .close-button { align-self: flex-end; }
+        #virtualKeyboard { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; max-width: 600px; width: 100%; margin: var(--gap-m) 0; }
+        #virtualKeyboard button { font-size: clamp(0.9rem, 2.5vmin, 1.2rem); padding: var(--gap-s); }
+        #playerNameDisplay { font-size: 2rem; letter-spacing: 4px; margin-bottom: var(--gap-m); min-height: 2.5rem; }
+        @media (max-aspect-ratio: 1/1) { #holographic-panel { flex-direction: column; height: auto; } #wordSearchGrid { width: 100%; height: auto; aspect-ratio: 1/1; } #wordListContainer { width: 100%; height: auto; } }
+
+        /* ===== VICTORY – compacto y centrado ===== */
+        #victory.window         { justify-content: center; align-items: center; }
+        .victory-panel           { background: var(--color-surface); border: 2px solid var(--color-accent-primary); box-shadow: 0 0 20px var(--color-accent-primary-glow); padding: var(--gap-l); text-align: center; display: flex; flex-direction: column; gap: var(--gap-m); min-width: 320px; max-width: 90vw; animation: scan-in .6s ease-out; }
+        @keyframes scan-in       { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
+        .promotion-title         { font-size: clamp(1.4rem, 5vmin, 2.2rem); color: var(--color-accent-gold); text-shadow: 0 0 8px var(--color-accent-gold); margin: 0; }
+        .victory-rank-glyph      { font-size: clamp(3rem, 12vmin, 5rem); line-height: 1; color: var(--color-accent-gold); text-shadow: 0 0 12px var(--color-accent-gold); }
+        .victory-footer          { margin-top: var(--gap-m); }
+</style>
 </head>
 <body>
     <div id="perspective-container">
@@ -100,19 +97,25 @@
             <div id="title" class="window"><h1>WORD SEARCH</h1><p>PRESIONA CUALQUIER TECLA PARA CONTINUAR</p></div>
             
             <div id="profiles" class="window">
-                <header class="telemetry-header"><span>WORD SEARCH :: SELECT PROFILE</span></header>
+                <header class="telemetry-header"><span>WORD SEARCH :: SELECT PROFILE</span><button id="settingsGear" class="interactive-button" data-action="openSettings" title="Configuración [S]">⚙</button></header>
                 <div class="window-content"><h2>PERFILES DE USUARIO</h2><ul id="profilesList" class="menu-list"></ul><button id="goToPlayerCreateButton" class="interactive-button" data-action="goToPlayerCreate">CREAR NUEVO PERFIL</button></div>
-                <footer class="telemetry-footer">BUILD: v1.0.0-r24</footer>
+                <footer class="telemetry-footer">BUILD: v1.5.0-r31</footer>
             </div>
 
             <div id="player" class="window">
-                 <header class="telemetry-header"><span>WORD SEARCH :: CREATE PROFILE</span></header>
-                 <div class="window-content"><h2>NUEVO JUGADOR</h2><div id="playerNameDisplay">_</div><div id="virtualKeyboard"></div><button id="cancelPlayerButton" style="margin-top: var(--gap-m);" data-action="goToProfiles">CANCELAR</button></div>
-                 <footer class="telemetry-footer">BUILD: v1.0.0-r24</footer>
+                 <header class="telemetry-header"><span>WORD SEARCH :: CREATE PROFILE</span><button id="settingsGear2" class="interactive-button" data-action="openSettings" title="Configuración [S]">⚙</button></header>
+                 <div class="window-content">
+                    <h2>NUEVO JUGADOR</h2>
+                    <div id="playerNameDisplay">_</div>
+                    <div id="virtualKeyboard"></div>
+                    <button id="cancelPlayerButton" style="margin-top: var(--gap-m);" data-action="goToProfiles">CANCELAR</button>
+                    <button id="confirmPlayerButton" style="margin-top: var(--gap-m);" data-action="confirmPlayerName">CONFIRMAR</button>
+                 </div>
+                 <footer class="telemetry-footer">BUILD: v1.5.0-r31</footer>
             </div>
 
             <div id="mainMenu" class="window">
-                <header class="telemetry-header"><span>WORD SEARCH :: MAIN MENU</span></header>
+                <header class="telemetry-header"><span>WORD SEARCH :: MAIN MENU</span><button id="settingsGear3" class="interactive-button" data-action="openSettings" title="Configuración [S]">⚙</button></header>
                 <div class="window-content">
                     <h2 id="mainMenuHeader"></h2>
                     <div id="levelGrid" class="menu-list"></div>
@@ -121,58 +124,139 @@
                         <button id="backToProfilesButton" data-action="clearActiveProfile">CAMBIAR PERFIL</button>
                     </div>
                 </div>
-                <footer class="telemetry-footer">BUILD: v1.0.0-r24</footer>
+                <footer class="telemetry-footer">BUILD: v1.5.0-r31</footer>
             </div>
             
             <div id="shop" class="window">
-                <header class="telemetry-header"><span id="shop-header">TIENDA</span></header>
-                <div class="window-content">
-                    <h2>CONSUMIBLES</h2>
-                    <div id="shopGrid"></div>
-                    <button id="backToMenuButton" style="margin-top:var(--gap-l);" data-action="goToMainMenu">VOLVER AL MENÚ</button>
-                </div>
-                <footer class="telemetry-footer">BUILD: v1.0.0-r24</footer>
+                <header class="telemetry-header"><span id="shop-header">TIENDA</span><button id="settingsGear4" class="interactive-button" data-action="openSettings" title="Configuración [S]">⚙</button></header>
+                <div class="window-content"><h2>CONSUMIBLES</h2><div id="shopGrid"></div><button id="backToMenuButton" style="margin-top:var(--gap-l);" data-action="goToMainMenu">VOLVER AL MENÚ</button></div>
+                <footer class="telemetry-footer">BUILD: v1.5.0-r31</footer>
             </div>
 
             <div id="game" class="window">
-                <header class="telemetry-header"><span id="gameHeaderTitle">JUGADOR :: CARGANDO...</span></header>
+                <header class="telemetry-header"><span id="gameHeaderTitle">JUGADOR :: CARGANDO...</span><button id="settingsGear5" class="interactive-button" data-action="openSettings" title="Configuración [S]">⚙</button></header>
                 <div class="window-content"><div id="holographic-panel"><div id="wordSearchGrid"></div><div id="wordListContainer"><h3>PALABRAS A ENCONTRAR</h3><ul id="wordList"></ul><div id="game-hud"><button id="hint-button">[ PISTA (0) ]</button><div id="word-timer">00:00</div></div></div></div></div>
-                <footer class="telemetry-footer">BUILD: v1.0.0-r24</footer>
+                <footer class="telemetry-footer">BUILD: v1.5.0-r31</footer>
             </div>
 
-            <div id="victory" class="window"><h1>NIVEL COMPLETADO</h1><div id="victoryRankProgress"></div><button id="victoryToMenuButton" data-action="goToMainMenu">CONTINUAR</button></div>
-            <div id="fullscreenOverlay" class="window" style="z-index: 999; background-color: rgba(0,0,0,0.95);"><h2>MODO PANTALLA COMPLETA REQUERIDO</h2><button id="reEnterFullscreenButton" data-action="requestFullscreen">REACTIVAR</button></div>
+            <!-- VICTORY – compacto y centrado -->
+            <div id="victory" class="window">
+                <div class="victory-panel">
+                    <h1>NIVEL COMPLETADO</h1>
+                    <div id="victoryRankProgress"></div>
+                    <div class="victory-footer">
+                        <button id="victoryToMenuButton" class="interactive-button" data-action="goToMainMenu">CONTINUAR</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="fullscreenOverlay" class="window" style="z-index: 999; background: rgba(0,0,0,0.95);"><h2>MODO PANTALLA COMPLETA REQUERIDO</h2><button id="reEnterFullscreenButton" data-action="requestFullscreen">REACTIVAR</button></div>
+
+            <!-- SETTINGS -->
+            <div id="settings" class="window">
+                <div id="settingsPanel">
+                    <button class="interactive-button close-button" data-action="closeSettings">✖</button>
+                    <h2>CONFIGURACIÓN</h2>
+                    <div class="settings-row">
+                        <label for="soundToggle">SONIDO</label>
+                        <button id="soundToggle" class="interactive-button" data-action="toggleSound">ON</button>
+                    </div>
+                    <div class="settings-row">
+                        <label for="paletteSelect">PALETA</label>
+                        <select id="paletteSelect" class="interactive-button" data-action="changePalette">
+                            <option value="retro">RETRO CYAN</option>
+                            <option value="lime">LIME MATRIX</option>
+                            <option value="amber">AMBER CRT</option>
+                            <option value="magenta">MAGENTA DREAM</option>
+                            <option value="ocean">OCEAN DEEP</option>
+                            <option value="sunset">SUNSET GLOW</option>
+                            <option value="monochrome">MONOCHROME</option>
+                        </select>
+                    </div>
+                    <div class="settings-row"><h3>RANGOS</h3></div>
+                    <div id="ranksList" class="two-column"></div>
+                    <div class="settings-row">
+                        <button id="exitButton" class="interactive-button" data-action="exitApp">SALIR</button>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
+
 <script>
+/* ==========  SISTEMA DE SONIDO  ========== */
+(function(){
+    var AudioCtx = window.AudioContext || window.webkitAudioContext;
+    var ctx = AudioCtx ? new AudioCtx() : null;
+    window.SFX = {
+        enabled: true,
+        beep: function(freq, dur, type){
+            if(!ctx || !this.enabled) return;
+            var osc = ctx.createOscillator();
+            var gain = ctx.createGain();
+            osc.type = type || 'square';
+            osc.frequency.value = freq;
+            gain.gain.value = 0.08;
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + (dur || 0.08));
+        },
+        toggle: function(){ this.enabled = !this.enabled; }
+    };
+})();
+
 (function() {
     'use strict';
     function createEventBus() { var l={}; return { on:function(e,t){(l[e]=l[e]||[]).push(t)},off:function(e,t){l[e]&&(l[e]=l[e].filter(function(l){return l!==t}))},emit:function(e,t){l[e]&&l[e].forEach(function(l){l(t)})} }; }
     var EventBus = createEventBus();
-    var state = { currentWindow: 'preload', activeProfile: null, profiles: {}, newPlayerName: '', isShiftActive: false, game: { isOver: false, isSelecting: false, selection: [], foundWords: [], activePuzzle: null, promoted: false, lastDifficulty: null, wordTimer: 0, wordTimerId: null, activeWordIndex: 0 } };
-    var windows = { preload: document.getElementById('preload'), title: document.getElementById('title'), profiles: document.getElementById('profiles'), player: document.getElementById('player'), mainMenu: document.getElementById('mainMenu'), shop: document.getElementById('shop'), game: document.getElementById('game'), victory: document.getElementById('victory'), fullscreenOverlay: document.getElementById('fullscreenOverlay') };
+    var state = { currentWindow: 'preload', activeProfile: null, profiles: {}, newPlayerName: '', isShiftActive: false, sound: true, palette: 'retro', game: { isOver: false, isSelecting: false, selection: [], foundWords: [], activePuzzle: null, promoted: false, lastDifficulty: null, wordTimer: 0, wordTimerId: null, activeWordIndex: 0, lastTouchTarget: null } };
+    var windows = { preload: document.getElementById('preload'), title: document.getElementById('title'), profiles: document.getElementById('profiles'), player: document.getElementById('player'), mainMenu: document.getElementById('mainMenu'), shop: document.getElementById('shop'), game: document.getElementById('game'), victory: document.getElementById('victory'), fullscreenOverlay: document.getElementById('fullscreenOverlay'), settings: document.getElementById('settings') };
     var ui = {
         profilesList: document.getElementById('profilesList'), goToPlayerCreateButton: document.getElementById('goToPlayerCreateButton'),
-        playerNameDisplay: document.getElementById('playerNameDisplay'), virtualKeyboard: document.getElementById('virtualKeyboard'), cancelPlayerButton: document.getElementById('cancelPlayerButton'),
+        playerNameDisplay: document.getElementById('playerNameDisplay'), virtualKeyboard: document.getElementById('virtualKeyboard'), cancelPlayerButton: document.getElementById('cancelPlayerButton'), confirmPlayerButton: document.getElementById('confirmPlayerButton'),
         mainMenuHeader: document.getElementById('mainMenuHeader'), levelGrid: document.getElementById('levelGrid'), backToProfilesButton: document.getElementById('backToProfilesButton'), goToShopButton: document.getElementById('goToShopButton'),
         shopHeader: document.getElementById('shop-header'), shopGrid: document.getElementById('shopGrid'), backToMenuButton: document.getElementById('backToMenuButton'),
         gameHeaderTitle: document.getElementById('gameHeaderTitle'), wordSearchGrid: document.getElementById('wordSearchGrid'), wordList: document.getElementById('wordList'), hintButton: document.getElementById('hint-button'), wordTimer: document.getElementById('word-timer'),
         victoryToMenuButton: document.getElementById('victoryToMenuButton'), reEnterFullscreenButton: document.getElementById('reEnterFullscreenButton'), holographicPanel: document.getElementById('holographic-panel'),
-        victoryRankProgress: document.getElementById('victoryRankProgress')
+        victoryRankProgress: document.getElementById('victoryRankProgress'),
+        soundToggle: document.getElementById('soundToggle'), paletteSelect: document.getElementById('paletteSelect'), ranksList: document.getElementById('ranksList')
     };
-    var PROFILES_KEY = 'ws-profiles';
-    var PLAYER_KEYBOARD_LAYOUT = ['Q','W','E','R','T','Y','U','Backspace','A','S','D','F','G','H','Enter','I','J','K','L','M','Ñ','O','P','Shift','Z','X','C','V','B','N'];
-    var WORD_LISTS = {
-        facil: ['API', 'BUG', 'BOT', 'BIT', 'BIOS', 'BLOG', 'BYTE', 'CACHE', 'CHIP', 'CHAT', 'CSS', 'DATO', 'DNS', 'DOM', 'DOS', 'DRM', 'EMAIL', 'FTP', 'GIF', 'GUI', 'HILO', 'HOST', 'HTML', 'HTTP', 'HUB', 'ICONO', 'JAVA', 'JSON', 'JQUERY', 'KERNEL', 'LAN', 'LINK', 'LOG', 'LUA', 'MAC'],
-        medio: ['ARRAY', 'ASCII', 'AVATAR', 'ANCHO', 'BANDA', 'BETA', 'BACKUP', 'CLASE', 'CLIENTE', 'CODIGO', 'COOKIE', 'DRIVER', 'DEBUG', 'ENLACE', 'EVENTO', 'FRAME', 'FUENTE', 'FUNCION', 'GAMING', 'GMAIL', 'HASHTAG', 'HEADER', 'INDEX', 'INPUT', 'LATENCIA', 'LOGIN', 'LOOP', 'MASCARA', 'MATRIZ', 'NODO', 'NUBE', 'OBJETO', 'ONLINE', 'OUTPUT', 'PUNTERO'],
-        dificil: ['ALGORITMO', 'ANALOGICO', 'APLICACION', 'ARCHIVO', 'BACKEND', 'BINARIO', 'BIOMETRIA', 'BLUETOOTH', 'COMPILAR', 'CODIFICAR', 'CONSOLA', 'CONSTANTE', 'CONTRASEÑA', 'CPU', 'CRIPTOGRAFIA', 'DEPURADOR', 'DESCARGAR', 'DIRECTORIO', 'ENCRIPTAR', 'FRAMEWORK', 'FIREWALL', 'GIGABYTE', 'HARDWARE', 'HACKATHON', 'HERTZ', 'INTERFAZ', 'INTERNET', 'INTRANET', 'JAVASCRIPT', 'LICENCIA', 'MALWARE', 'MEMORIA', 'METADATOS', 'MICROCHIP', 'MODULAR']
-    };
+    var PROFILES_KEY = 'ws-profiles-v150'; var SETTINGS_KEY = 'ws-settings-v150';
+    var PLAYER_KEYBOARD_LAYOUT = [
+        ['Q','W','E','R','T','Y','U','I','O','P'],
+        ['A','S','D','F','G','H','J','K','L','Ñ'],
+        ['Z','X','C','V','B','N','M','Backspace','Enter','Space']
+    ];
+    var WORD_LISTS = { facil: ['API', 'BUG', 'BOT', 'BIT', 'BIOS', 'BLOG', 'BYTE', 'CACHE', 'CHIP', 'CHAT', 'CSS', 'DATO', 'DNS', 'DOM', 'DOS', 'DRM', 'EMAIL', 'FTP', 'GIF', 'GUI', 'HILO', 'HOST', 'HTML', 'HTTP', 'HUB', 'ICONO', 'JAVA', 'JSON', 'JQUERY', 'KERNEL', 'LAN', 'LINK', 'LOG', 'LUA', 'MAC'], medio: ['ARRAY', 'ASCII', 'AVATAR', 'ANCHO', 'BANDA', 'BETA', 'BACKUP', 'CLASE', 'CLIENTE', 'CODIGO', 'COOKIE', 'DRIVER', 'DEBUG', 'ENLACE', 'EVENTO', 'FRAME', 'FUENTE', 'FUNCION', 'GAMING', 'GMAIL', 'HASHTAG', 'HEADER', 'INDEX', 'INPUT', 'LATENCIA', 'LOGIN', 'LOOP', 'MASCARA', 'MATRIZ', 'NODO', 'NUBE', 'OBJETO', 'ONLINE', 'OUTPUT', 'PUNTERO'], dificil: ['ALGORITMO', 'ANALOGICO', 'APLICACION', 'ARCHIVO', 'BACKEND', 'BINARIO', 'BIOMETRIA', 'BLUETOOTH', 'COMPILAR', 'CODIFICAR', 'CONSOLA', 'CONSTANTE', 'CONTRASEÑA', 'CPU', 'CRIPTOGRAFIA', 'DEPURADOR', 'DESCARGAR', 'DIRECTORIO', 'ENCRIPTAR', 'FRAMEWORK', 'FIREWALL', 'GIGABYTE', 'HARDWARE', 'HACKATHON', 'HERTZ', 'INTERFAZ', 'INTERNET', 'INTRANET', 'JAVASCRIPT', 'LICENCIA', 'MALWARE', 'MEMORIA', 'METADATOS', 'MICROCHIP', 'MODULAR'] };
     var DIRECTIONS = [{f:'H',x:1,y:0},{f:'V',x:0,y:1},{f:'D',x:1,y:1},{f:'HI',x:-1,y:0},{f:'VI',x:0,y:-1},{f:'DI',x:-1,y:-1},{f:'DA',x:1,y:-1},{f:'DAI',x:-1,y:1}];
-    var RANKS = [ { name: 'RECLUTA', glyph: 'ˇ' }, { name: 'PRIVADO', glyph: '∧' }, { name: 'CORPORAL', glyph: '≡' }, { name: 'SARGENTO', glyph: '∗' }, { name: 'TENIENTE', glyph: '★' }, { name: 'CAPITÁN', glyph: '✪' }, { name: 'MAYOR', glyph: '✯' }, { name: 'CORONEL', glyph: '⚜' }, { name: 'GENERAL', glyph: '⚝' }, { name: 'MARISCAL', glyph: '✠' }];
+    var RANKS = [ 
+        { name: 'RECLUTA',      glyph: 'ˇ' }, 
+        { name: 'DRAGONEANTE',  glyph: 'Δ' },
+        { name: 'CABO',         glyph: '≡' },
+        { name: 'SARGENTO',     glyph: '∗' }, 
+        { name: 'TENIENTE',     glyph: '★' }, 
+        { name: 'CAPITÁN',      glyph: '✪' }, 
+        { name: 'MAYOR',        glyph: '✯' }, 
+        { name: 'CORONEL',      glyph: '⚜' }, 
+        { name: 'GENERAL',      glyph: '⚝' }, 
+        { name: 'MARISCAL',     glyph: '✠' }
+    ];
     var SHOP_ITEMS = { hint_pack_1: { name: 'PAQUETE DE PISTAS', description: '3 pistas para usar en el juego.', cost: 500, onPurchase: function(p){ p.inventory.hints += 3; } } };
-
+    var PALETTES = {
+        retro:     { '--color-bg-primary':'#0A0A0A','--color-surface':'#141414','--color-func':'#2A2A2A','--color-text-passive':'#B0B0B0','--color-text-bright':'#FFFFFF','--color-accent-primary':'#00FFFF','--color-accent-primary-glow':'rgba(0,255,255,0.4)','--color-error':'#FF414B','--color-success':'#39FF14','--color-accent-gold':'#FFD700','--color-found':'#006B6B' },
+        lime:      { '--color-bg-primary':'#000000','--color-surface':'#0f0f0f','--color-func':'#1a1a1a','--color-text-passive':'#66FF66','--color-text-bright':'#99FF99','--color-accent-primary':'#66FF00','--color-accent-primary-glow':'rgba(102,255,0,0.4)','--color-error':'#FF6666','--color-success':'#66FF00','--color-accent-gold':'#CCFF00','--color-found':'#004D00' },
+        amber:     { '--color-bg-primary':'#1A1100','--color-surface':'#2B1E00','--color-func':'#3D2A00','--color-text-passive':'#FFB000','--color-text-bright':'#FFD57F','--color-accent-primary':'#FFB000','--color-accent-primary-glow':'rgba(255,176,0,0.4)','--color-error':'#FF5555','--color-success':'#FFB000','--color-accent-gold':'#FFD700','--color-found':'#4D3300' },
+        magenta:   { '--color-bg-primary':'#1A001A','--color-surface':'#2B002B','--color-func':'#3D003D','--color-text-passive':'#FF66FF','--color-text-bright':'#FFCCFF','--color-accent-primary':'#FF00FF','--color-accent-primary-glow':'rgba(255,0,255,0.4)','--color-error':'#FF5555','--color-success':'#FF00FF','--color-accent-gold':'#FFCC00','--color-found':'#4D004D' },
+        ocean:     { '--color-bg-primary':'#001A1A','--color-surface':'#002B2B','--color-func':'#003D3D','--color-text-passive':'#66FFFF','--color-text-bright':'#CCFFFF','--color-accent-primary':'#00FFFF','--color-accent-primary-glow':'rgba(0,255,255,0.4)','--color-error':'#FF5555','--color-success':'#00FFFF','--color-accent-gold':'#FFD700','--color-found':'#006B6B' },
+        sunset:    { '--color-bg-primary':'#1A0F00','--color-surface':'#2B1900','--color-func':'#3D2400','--color-text-passive':'#FF9966','--color-text-bright':'#FFCCB3','--color-accent-primary':'#FF6600','--color-accent-primary-glow':'rgba(255,102,0,0.4)','--color-error':'#FF5555','--color-success':'#FF6600','--color-accent-gold':'#FFD700','--color-found':'#662200' },
+        monochrome:{ '--color-bg-primary':'#000000','--color-surface':'#1A1A1A','--color-func':'#333333','--color-text-passive':'#CCCCCC','--color-text-bright':'#FFFFFF','--color-accent-primary':'#FFFFFF','--color-accent-primary-glow':'rgba(255,255,255,0.4)','--color-error':'#FF5555','--color-success':'#FFFFFF','--color-accent-gold':'#CCCCCC','--color-found':'#333333' }
+    };
     function requestFullscreen() { var e = document.documentElement; if (e.requestFullscreen) e.requestFullscreen(); else if (e.webkitRequestFullscreen) e.webkitRequestFullscreen(); else if (e.mozRequestFullScreen) e.mozRequestFullScreen(); else if (e.msRequestFullscreen) e.msRequestFullscreen(); }
     function saveProfiles() { try { localStorage.setItem(PROFILES_KEY, JSON.stringify(state.profiles)); } catch(e) {} }
+    function saveSettings() { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify({sound: state.sound, palette: state.palette})); } catch(e){} }
+    function loadSettings() { try { var s = JSON.parse(localStorage.getItem(SETTINGS_KEY)); if(s){ state.sound = s.sound; state.palette = s.palette; applyPalette(); ui.soundToggle.textContent = state.sound ? 'ON' : 'OFF'; ui.paletteSelect.value = state.palette; SFX.enabled = state.sound; } } catch(e){} }
+    function applyPalette() { var p = PALETTES[state.palette]; for (var k in p) document.documentElement.style.setProperty(k, p[k]); }
     function loadProfiles() {
         try {
             var p = JSON.parse(localStorage.getItem(PROFILES_KEY));
@@ -191,8 +275,21 @@
     function showWindow(id) { for (var k in windows) { if(windows[k]) windows[k].classList.remove('active'); } if(windows[id]) windows[id].classList.add('active'); state.currentWindow = id; }
     function fisherYatesShuffle(a){var m=a.length,t,i;while(m){i=Math.floor(Math.random()*m--);t=a[m];a[m]=a[i];a[i]=t}return a}
     function renderProfiles() { ui.profilesList.innerHTML = ''; Object.keys(state.profiles).forEach(function(name) { var li = document.createElement('li'); li.className = 'profile-entry'; var btn = document.createElement('button'); btn.textContent = name; btn.className = 'interactive-button profile-button'; btn.dataset.profileName = name; var delBtn = document.createElement('button'); delBtn.textContent = 'X'; delBtn.className = 'delete-button'; delBtn.dataset.profileName = name; li.appendChild(btn); li.appendChild(delBtn); ui.profilesList.appendChild(li); }); }
-    function renderPlayerKeyboard() { ui.virtualKeyboard.innerHTML = ''; PLAYER_KEYBOARD_LAYOUT.forEach(function(k) { var btn = document.createElement('button'); btn.className = 'interactive-button'; var t = k; if(k === 'Backspace') t='←'; if(k === 'Enter') t='↵'; if(k === 'Shift') t='⇧'; btn.textContent = t; btn.dataset.key = k; ui.virtualKeyboard.appendChild(btn); }); }
-    
+    function renderPlayerKeyboard() {
+        ui.virtualKeyboard.innerHTML = '';
+        PLAYER_KEYBOARD_LAYOUT.forEach(function(row, rIdx) {
+            row.forEach(function(k) {
+                var btn = document.createElement('button');
+                btn.className = 'interactive-button';
+                var t = k;
+                if(k === 'Backspace') t='←'; if(k === 'Enter') t='↵'; if(k === 'Space') t='ESPACIO';
+                btn.textContent = t;
+                btn.dataset.key = k;
+                if(k === 'Space') btn.style.gridColumn = 'span 2';
+                ui.virtualKeyboard.appendChild(btn);
+            });
+        });
+    }
     function renderMainMenu() {
         if(!ui.levelGrid || !state.activeProfile) return;
         var profile = state.profiles[state.activeProfile];
@@ -214,7 +311,6 @@
             ui.levelGrid.appendChild(card);
         });
     }
-
     function renderShop() {
         var profile = state.profiles[state.activeProfile];
         ui.shopHeader.textContent = 'TIENDA :: ' + profile.creditos + ' CRÉDITOS';
@@ -227,12 +323,23 @@
             var buyBtn = document.createElement('button');
             buyBtn.textContent = 'COMPRAR';
             buyBtn.dataset.itemId = id;
-            if (profile.creditos < item.cost) buyBtn.disabled = true;
+            buyBtn.disabled = profile.creditos < item.cost;
             itemEl.appendChild(buyBtn);
             ui.shopGrid.appendChild(itemEl);
         });
     }
-
+    function renderRanksList() {
+        ui.ranksList.innerHTML = '';
+        RANKS.forEach(function(r, idx) {
+            var cell = document.createElement('div'); cell.className = 'rank-cell';
+            var badge = document.createElement('div'); badge.className = 'rank-badge'; badge.style.width = '30px'; badge.style.height = '30px'; badge.style.marginRight = 'var(--gap-s)';
+            var glyph = document.createElement('span'); glyph.className = 'rank-glyph'; glyph.textContent = r.glyph;
+            badge.appendChild(glyph);
+            var name = document.createElement('span'); name.textContent = r.name;
+            cell.appendChild(badge); cell.appendChild(name);
+            ui.ranksList.appendChild(cell);
+        });
+    }
     function generarNivelSopaDeLetras(difficulty) {
         var profile = state.profiles[state.activeProfile];
         var config = { facil: { size: 12, words: 7 }, medio: { size: 14, words: 7 }, dificil: { size: 16, words: 7 } }[difficulty];
@@ -265,113 +372,242 @@
         for (var y = 0; y < config.size; y++) { for (var x = 0; x < config.size; x++) { if (grid[y][x] === null) { grid[y][x] = 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ'[Math.floor(Math.random() * 27)]; } } }
         return { grid: grid, words: placedWords, size: config.size };
     }
-
     var GameManager = {
-        startGame: function(difficulty) { state.game.isOver = false; state.game.foundWords = []; state.game.difficulty = difficulty; state.game.promoted = false; state.game.activePuzzle = generarNivelSopaDeLetras(difficulty); this.renderGrid(); this.renderWordList(); ui.gameHeaderTitle.textContent = 'JUGADOR :: ' + state.activeProfile; this.moveToNextWord(true); EventBus.emit('system:requestNavigation', { windowId: 'game' }); },
-        renderGrid: function() { var puzzle = state.game.activePuzzle; ui.wordSearchGrid.innerHTML = ''; ui.wordSearchGrid.style.setProperty('--grid-size', puzzle.size); puzzle.grid.forEach(function(row, y) { row.forEach(function(letter, x) { var cell = document.createElement('div'); cell.className = 'grid-cell'; cell.textContent = letter; cell.dataset.x = x; cell.dataset.y = y; ui.wordSearchGrid.appendChild(cell); }); }); },
+        startGame: function(difficulty) { 
+            state.game.isOver = false; state.game.foundWords = []; state.game.difficulty = difficulty; state.game.promoted = false; 
+            state.game.activePuzzle = generarNivelSopaDeLetras(difficulty); 
+            this.renderGrid(); this.renderWordList(); 
+            ui.gameHeaderTitle.textContent = 'JUGADOR :: ' + state.activeProfile; 
+            this.moveToNextWord(true); 
+            EventBus.emit('system:requestNavigation', { windowId: 'game' }); 
+        },
+        renderGrid: function() { 
+            var puzzle = state.game.activePuzzle; 
+            ui.wordSearchGrid.innerHTML = ''; 
+            ui.wordSearchGrid.style.setProperty('--grid-size', puzzle.size); 
+            puzzle.grid.forEach(function(row, y) { 
+                row.forEach(function(letter, x) { 
+                    var cell = document.createElement('div'); 
+                    cell.className = 'grid-cell'; 
+                    cell.textContent = letter; 
+                    cell.dataset.x = x; 
+                    cell.dataset.y = y; 
+                    ui.wordSearchGrid.appendChild(cell); 
+                }); 
+            }); 
+        },
         updateHud: function() {
             var hints = state.profiles[state.activeProfile].inventory.hints;
             ui.hintButton.textContent = '[ PISTA (' + hints + ') ]';
             ui.hintButton.disabled = hints <= 0;
-            var minutes = Math.floor(state.game.wordTimer / 60); var seconds = state.game.wordTimer % 60;
+            var minutes = Math.floor(state.game.wordTimer / 60); 
+            var seconds = state.game.wordTimer % 60;
             ui.wordTimer.textContent = (minutes < 10 ? '0':'') + minutes + ':' + (seconds < 10 ? '0':'') + seconds;
         },
         renderWordList: function() {
-            var puzzle = state.game.activePuzzle; var profile = state.profiles[state.activeProfile]; var showHints = profile.ranks[state.game.difficulty] <= 1; 
+            var puzzle = state.game.activePuzzle; 
+            var profile = state.profiles[state.activeProfile]; 
+            var showHints = profile.ranks[state.game.difficulty] <= 1; 
             var dirMap = {H:'→',V:'↓',D:'↘',HI:'←',VI:'↑',DI:'↖',DA:'↗',DAI:'↙'};
             ui.wordList.innerHTML = '';
             puzzle.words.forEach(function(wordData, index) {
-                var li = document.createElement('li'); var hint = showHints ? (dirMap[wordData.direction] || '') + ' ' : '';
-                li.textContent = hint + wordData.text; li.dataset.word = wordData.text;
+                var li = document.createElement('li'); 
+                var hint = showHints ? (dirMap[wordData.direction] || '') + ' ' : '';
+                li.textContent = hint + wordData.text; 
+                li.dataset.word = wordData.text;
                 if(state.game.foundWords.includes(wordData.text)) li.classList.add('found');
                 if(index === state.game.activeWordIndex && !state.game.isOver) li.classList.add('active-word');
                 ui.wordList.appendChild(li);
             });
             this.updateHud();
         },
-        startWordTimer: function() { clearInterval(state.game.wordTimerId); state.game.wordTimer = 60; this.updateHud(); state.game.wordTimerId = setInterval(this.tick.bind(this), 1000); },
+        startWordTimer: function() { 
+            clearInterval(state.game.wordTimerId); 
+            state.game.wordTimer = 60; 
+            this.updateHud(); 
+            state.game.wordTimerId = setInterval(this.tick.bind(this), 1000); 
+        },
         tick: function() {
-            state.game.wordTimer--; this.updateHud();
-            if (state.game.wordTimer <= 0) { this.moveToNextWord(false); }
+            state.game.wordTimer--; 
+            this.updateHud();
+            if (state.game.wordTimer <= 0) { 
+                SFX.beep(220,0.2,'sawtooth');
+                this.moveToNextWord(false); 
+            }
         },
         moveToNextWord: function(isFirstWord) {
-            var puzzle = state.game.activePuzzle; var nextIndex = -1; var startIndex = isFirstWord ? 0 : state.game.activeWordIndex;
-            for (var i = startIndex; i < puzzle.words.length; i++) { if (!state.game.foundWords.includes(puzzle.words[i].text)) { nextIndex = i; break; } }
-            if (nextIndex === -1 && !isFirstWord) { for (var i = 0; i < state.game.activeWordIndex; i++) { if (!state.game.foundWords.includes(puzzle.words[i].text)) { nextIndex = i; break; } } }
-            if (nextIndex !== -1) { state.game.activeWordIndex = nextIndex; this.startWordTimer(); this.renderWordList(); } 
-            else { this.checkGameState(); }
+            var puzzle = state.game.activePuzzle; 
+            var nextIndex = -1; 
+            var startIndex = isFirstWord ? 0 : state.game.activeWordIndex;
+            for (var i = startIndex; i < puzzle.words.length; i++) { 
+                if (!state.game.foundWords.includes(puzzle.words[i].text)) { 
+                    nextIndex = i; 
+                    break; 
+                } 
+            }
+            if (nextIndex === -1 && !isFirstWord) { 
+                for (var i = 0; i < startIndex; i++) { 
+                    if (!state.game.foundWords.includes(puzzle.words[i].text)) { 
+                        nextIndex = i; 
+                        break; 
+                    } 
+                } 
+            }
+            if (nextIndex !== -1) { 
+                state.game.activeWordIndex = nextIndex; 
+                this.startWordTimer(); 
+                this.renderWordList(); 
+            } else { 
+                this.checkGameState(); 
+            }
+        },
+        handleSelectionStart: function(cell) { 
+            if (!cell || state.game.isOver) return; 
+            state.game.isSelecting = true; 
+            this.clearSelectionUI(); 
+            state.game.selection = [cell]; 
+            cell.classList.add('selected'); 
+            SFX.beep(440,0.05,'square');
+        },
+        handleSelectionMove: function(cell) {
+            if (!state.game.isSelecting || !cell) return;
+            this.clearSelectionUI();
+            var startCell = state.game.selection[0]; 
+            var endCell = cell;
+            var startX = parseInt(startCell.dataset.x), startY = parseInt(startCell.dataset.y);
+            var endX = parseInt(endCell.dataset.x), endY = parseInt(endCell.dataset.y);
+            var dx = Math.sign(endX - startX), dy = Math.sign(endY - startY);
+            if (Math.abs(endX - startX) !== Math.abs(endY - startY) && (startX !== endX && startY !== endY)) return;
+            state.game.selection = [startCell];
+            var currX = startX, currY = startY;
+            while (currX !== endX || currY !== endY) { 
+                currX += dx; 
+                currY += dy; 
+                var nextCell = ui.wordSearchGrid.querySelector('[data-x="' + currX + '"][data-y="' + currY + '"]'); 
+                if(nextCell) state.game.selection.push(nextCell); 
+            }
+            state.game.selection.forEach(function(c) { c.classList.add('selected'); });
         },
         handleSelectionEnd: function() {
-            if (state.game.isSelecting) {
-                state.game.isSelecting = false;
-                if (state.game.selection.length < 2) { this.clearSelectionUI(); return; }
-                var selectedString = state.game.selection.map(function(c){return c.textContent}).join('');
-                var puzzle = state.game.activePuzzle;
-                var foundWordData = puzzle.words.find(function(w) { return (w.text === selectedString || w.text === selectedString.split('').reverse().join('')) && !state.game.foundWords.includes(w.text); });
-                
-                if (foundWordData) {
-                    state.game.foundWords.push(foundWordData.text);
-                    var wasActiveWord = puzzle.words[state.game.activeWordIndex].text === foundWordData.text;
-                    
-                    var foundCells = [].slice.call(state.game.selection);
-                    foundCells.forEach(function(cell) { cell.classList.remove('selected'); cell.classList.add('found'); });
-                    setTimeout(function() {
-                        foundCells.forEach(function(cell) { cell.classList.add('inactive'); });
-                    }, 1000);
-
-                    if (wasActiveWord) { 
-                        var bonus = state.game.wordTimer;
-                        state.profiles[state.activeProfile].creditos += bonus;
-                        this.moveToNextWord(false);
-                    } else {
-                        this.renderWordList();
-                    }
-                    this.checkGameState();
-                } else {
-                    var selectedCells = [].slice.call(state.game.selection);
-                    selectedCells.forEach(function(cell) { cell.classList.add('error'); });
-                    setTimeout(function() {
-                        selectedCells.forEach(function(cell) { cell.classList.remove('error'); });
-                        GameManager.clearSelectionUI();
-                    }, 300);
+            if (!state.game.isSelecting) return;
+            state.game.isSelecting = false;
+            if (state.game.selection.length < 2) { 
+                this.clearSelectionUI(); 
+                return; 
+            }
+            var selectedString = state.game.selection.map(function(c){return c.textContent}).join('');
+            var puzzle = state.game.activePuzzle;
+            var foundWordData = puzzle.words.find(function(w) { 
+                return (w.text === selectedString || w.text === selectedString.split('').reverse().join('')) && !state.game.foundWords.includes(w.text); 
+            });
+            if (foundWordData) {
+                state.game.foundWords.push(foundWordData.text);
+                var wasActiveWord = puzzle.words[state.game.activeWordIndex].text === foundWordData.text;
+                var foundCells = [].slice.call(state.game.selection);
+                foundCells.forEach(function(cell) { 
+                    cell.classList.remove('selected'); 
+                    cell.classList.add('found'); 
+                });
+                SFX.beep(880,0.15,'sine');
+                setTimeout(function() { 
+                    foundCells.forEach(function(cell) { 
+                        cell.classList.add('inactive'); 
+                    }); 
+                }, 1000);
+                if (wasActiveWord) { 
+                    var bonus = state.game.wordTimer; 
+                    state.profiles[state.activeProfile].creditos += bonus; 
+                    this.moveToNextWord(false); 
+                } else { 
+                    this.renderWordList(); 
                 }
+                this.checkGameState();
+            } else {
+                var selectedCells = [].slice.call(state.game.selection);
+                selectedCells.forEach(function(cell) { cell.classList.add('error'); });
+                SFX.beep(110,0.2,'sawtooth');
+                setTimeout(function() { 
+                    selectedCells.forEach(function(cell) { cell.classList.remove('error'); }); 
+                    GameManager.clearSelectionUI(); 
+                }, 300);
             }
         },
         checkGameState: function() {
             if (state.game.foundWords.length === state.game.activePuzzle.words.length) {
-                state.game.isOver = true; clearInterval(state.game.wordTimerId); var profile = state.profiles[state.activeProfile]; var difficulty = state.game.difficulty;
+                state.game.isOver = true; 
+                clearInterval(state.game.wordTimerId); 
+                var profile = state.profiles[state.activeProfile]; 
+                var difficulty = state.game.difficulty;
                 profile.repetitions[difficulty]++;
                 if (profile.repetitions[difficulty] >= 3) {
-                    if (profile.ranks[difficulty] < RANKS.length - 1) { profile.ranks[difficulty]++; state.game.promoted = true; }
+                    if (profile.ranks[difficulty] < RANKS.length - 1) { 
+                        profile.ranks[difficulty]++; 
+                        state.game.promoted = true; 
+                    }
                     profile.repetitions[difficulty] = 0;
                 }
                 state.game.lastDifficulty = difficulty;
-                saveProfiles(); setTimeout(function(){ EventBus.emit('game:victory'); }, 500);
+                saveProfiles(); 
+                setTimeout(function(){ 
+                    SFX.beep(1320,0.2,'sine');
+                    EventBus.emit('game:victory'); 
+                }, 500);
             }
         },
         useHint: function() {
-            var profile = state.profiles[state.activeProfile]; if (profile.inventory.hints <= 0) return;
-            var unfoundWord = state.game.activePuzzle.words.find(function(w) { return !state.game.foundWords.includes(w.text); });
+            var profile = state.profiles[state.activeProfile]; 
+            if (profile.inventory.hints <= 0) return;
+            var unfoundWord = state.game.activePuzzle.words.find(function(w) { 
+                return !state.game.foundWords.includes(w.text); 
+            });
             if (unfoundWord) {
                 profile.inventory.hints--;
                 var firstLetterCell = unfoundWord.cells[0];
                 var cellEl = ui.wordSearchGrid.querySelector('[data-x="' + firstLetterCell.x + '"][data-y="' + firstLetterCell.y + '"]');
-                if (cellEl) { cellEl.classList.add('hint'); setTimeout(function() { cellEl.classList.remove('hint'); }, 1600); }
-                saveProfiles(); this.updateHud();
+                if (cellEl) { 
+                    cellEl.classList.add('hint'); 
+                    SFX.beep(660,0.12,'triangle');
+                    setTimeout(function() { cellEl.classList.remove('hint'); }, 600); 
+                }
+                saveProfiles(); 
+                this.updateHud();
             }
         },
-        clearSelectionUI: function() { document.querySelectorAll('.grid-cell.selected').forEach(function(c) { c.classList.remove('selected'); }); }
+        clearSelectionUI: function() { 
+            document.querySelectorAll('.grid-cell.selected').forEach(function(c) { 
+                c.classList.remove('selected'); 
+            }); 
+        }
     };
     function renderVictoryProgress() {
-        var profile = state.profiles[state.activeProfile]; var difficulty = state.game.lastDifficulty; ui.victoryRankProgress.innerHTML = '';
-        if (state.game.promoted) { var newRank = RANKS[profile.ranks[difficulty]]; ui.victoryRankProgress.innerHTML = '<h2 class="promotion-title">¡ASCENDIDO!</h2><p>NUEVO RANGO ('+difficulty.toUpperCase()+'): ' + newRank.glyph + ' ' + newRank.name + '</p>'; } 
-        else { var reps = profile.repetitions[difficulty]; ui.victoryRankProgress.innerHTML = '<p>PROGRESO ('+difficulty.toUpperCase()+'): ' + reps + ' / 3</p>'; }
+        var profile = state.profiles[state.activeProfile]; 
+        var difficulty = state.game.lastDifficulty; 
+        var box = ui.victoryRankProgress;
+        box.innerHTML = '';
+        if (state.game.promoted) {
+            var newRank = RANKS[profile.ranks[difficulty]];
+            box.innerHTML = '<h2 class="promotion-title">¡ASCENDIDO!</h2>' +
+                            '<div class="victory-rank-glyph">' + newRank.glyph + '</div>' +
+                            '<p>NUEVO RANGO (' + difficulty.toUpperCase() + '): ' + newRank.name + '</p>';
+        } else {
+            var reps = profile.repetitions[difficulty];
+            box.innerHTML = '<p>PROGRESO (' + difficulty.toUpperCase() + '): ' + reps + ' / 3</p>';
+        }
     }
     document.addEventListener('DOMContentLoaded', function() {
-        loadProfiles(); renderProfiles(); renderPlayerKeyboard();
-        var initialKeyListener = function() { EventBus.emit('system:requestNavigation', { windowId: 'profiles', requestFullscreen: true }); };
+        loadProfiles(); 
+        loadSettings(); 
+        renderProfiles(); 
+        renderPlayerKeyboard(); 
+        renderRanksList();
+        var initialKeyListener = function() { 
+            EventBus.emit('system:requestNavigation', { windowId: 'profiles', requestFullscreen: true }); 
+        };
         windows.title.addEventListener('click', initialKeyListener, { once: true });
         document.addEventListener('keydown', initialKeyListener, { once: true });
+        document.addEventListener('keydown', function(e) { 
+            if (e.key.toLowerCase() === 's') EventBus.emit('settings:toggle'); 
+        });
         
         document.body.addEventListener('click', function(e) {
             var actionTarget = e.target.closest('[data-action]');
@@ -384,36 +620,163 @@
                 case 'goToMainMenu': showWindow('mainMenu'); renderMainMenu(); break;
                 case 'goToShop': showWindow('shop'); renderShop(); break;
                 case 'requestFullscreen': requestFullscreen(); break;
+                case 'openSettings': showWindow('settings'); break;
+                case 'closeSettings': showWindow(state.currentWindow === 'settings' ? 'mainMenu' : state.currentWindow); break;
+                case 'toggleSound': state.sound = !state.sound; ui.soundToggle.textContent = state.sound ? 'ON' : 'OFF'; SFX.enabled = state.sound; saveSettings(); break;
+                case 'changePalette': state.palette = actionTarget.value; applyPalette(); saveSettings(); break;
+                case 'exitApp': window.close(); if(!window.closed) alert('Por favor cierra la pestaña manualmente.'); break;
+                case 'confirmPlayerName': 
+                    var name = state.newPlayerName.trim();
+                    if(name.length > 0 && !state.profiles[name]){
+                        state.profiles[name] = { ranks: { facil: 0, medio: 0, dificil: 0 }, repetitions: { facil: 0, medio: 0, dificil: 0 }, usedWords: { facil: [], medio: [], dificil: [] }, creditos: 0, inventory: { hints: 3 } };
+                        state.activeProfile = name;
+                        saveProfiles();
+                        showWindow('mainMenu');
+                        renderMainMenu();
+                        SFX.beep(660,0.1,'sine');
+                    }
+                    break;
+            }
+        });
+        
+        ui.virtualKeyboard.addEventListener('click', function(e) {
+            if (!e.target.dataset.key) return;
+            var key = e.target.dataset.key;
+            var display = ui.playerNameDisplay;
+            if (key === 'Backspace') { state.newPlayerName = state.newPlayerName.slice(0, -1); }
+            else if (key === 'Enter') { document.querySelector('[data-action="confirmPlayerName"]').click(); return; }
+            else if (key === 'Space') { state.newPlayerName += ' '; }
+            else if (key.length === 1) { state.newPlayerName += key; }
+            display.textContent = state.newPlayerName || '_';
+            SFX.beep(440 + Math.random()*200, 0.05, 'square');
+        });
+        document.addEventListener('keydown', function(e) {
+            if (state.currentWindow !== 'player') return;
+            var display = ui.playerNameDisplay;
+            if (e.key === 'Backspace') { 
+                state.newPlayerName = state.newPlayerName.slice(0, -1); 
+                display.textContent = state.newPlayerName || '_'; 
+                e.preventDefault(); 
+                SFX.beep(300,0.05,'sawtooth');
+            }
+            else if (e.key === 'Enter') { 
+                document.querySelector('[data-action="confirmPlayerName"]').click(); 
+            }
+            else if (/^[a-zA-Z0-9ñÑ ]$/.test(e.key)) { 
+                state.newPlayerName += e.key.toUpperCase(); 
+                display.textContent = state.newPlayerName; 
+                e.preventDefault(); 
+                SFX.beep(440 + Math.random()*200, 0.05, 'square');
             }
         });
         
         ui.profilesList.addEventListener('click', function(e) {
-            var name = e.target.dataset.profileName; if (!name) return;
-            if (e.target.classList.contains('profile-button')) { state.activeProfile = name; showWindow('mainMenu'); renderMainMenu(); } 
-            else if (e.target.classList.contains('delete-button')) { EventBus.emit('profile:deleted', { profileName: name }); }
+            var name = e.target.dataset.profileName; 
+            if (!name) return;
+            if (e.target.classList.contains('profile-button')) { 
+                state.activeProfile = name; 
+                showWindow('mainMenu'); 
+                renderMainMenu(); 
+                SFX.beep(550,0.08,'triangle');
+            } else if (e.target.classList.contains('delete-button')) { 
+                EventBus.emit('profile:deleted', { profileName: name }); 
+                SFX.beep(150,0.15,'sawtooth');
+            }
         });
-        ui.virtualKeyboard.addEventListener('click', function(e) {
-            var key = e.target.dataset.key; if(!key) return;
-            if (key === 'Enter') { var name = state.newPlayerName.trim(); if (name && !state.profiles[name]) { state.profiles[name] = { solvedWords: { facil: [], medio: [], dificil: [] }, ranks: { facil: 0, medio: 0, dificil: 0 }, repetitions: { facil: 0, medio: 0, dificil: 0 }, usedWords: { facil: [], medio: [], dificil: [] }, creditos: 0, inventory: { hints: 3 } }; saveProfiles(); renderProfiles(); state.newPlayerName = ''; ui.playerNameDisplay.textContent = '_'; showWindow('profiles'); }
-            } else if (key === 'Backspace') { state.newPlayerName = state.newPlayerName.slice(0, -1);
-            } else if (key !== 'Shift') { if(state.newPlayerName.length < 12) state.newPlayerName += key; }
-            ui.playerNameDisplay.textContent = state.newPlayerName || '_';
+        ui.levelGrid.addEventListener('click', function(e) { 
+            var card = e.target.closest('.level-card'); 
+            var diff = card ? card.dataset.difficulty : null; 
+            if (diff && state.activeProfile) { 
+                GameManager.startGame(diff); 
+            } 
         });
-        ui.levelGrid.addEventListener('click', function(e) { var card = e.target.closest('.level-card'); var diff = card ? card.dataset.difficulty : null; if (diff && state.activeProfile) { GameManager.startGame(diff); } });
-        ui.hintButton.addEventListener('click', function() { GameManager.useHint(); });
-        ui.shopGrid.addEventListener('click', function(e){ var btn = e.target.closest('button[data-item-id]'); if(btn) { var itemId = btn.dataset.itemId; var item = SHOP_ITEMS[itemId]; var profile = state.profiles[state.activeProfile]; if (profile.creditos >= item.cost) { profile.creditos -= item.cost; item.onPurchase(profile); saveProfiles(); renderShop(); renderMainMenu(); } } });
-        ui.wordSearchGrid.addEventListener('mousedown', function(e) { if(e.target.classList.contains('grid-cell')){ state.game.isSelecting = true; GameManager.clearSelectionUI(); state.game.selection = [e.target]; e.target.classList.add('selected'); } });
-        ui.wordSearchGrid.addEventListener('mouseover', function(e) { if (state.game.isSelecting && e.target.classList.contains('grid-cell')) { GameManager.clearSelectionUI(); var startCell = state.game.selection[0], endCell = e.target; var startX = parseInt(startCell.dataset.x), startY = parseInt(startCell.dataset.y); var endX = parseInt(endCell.dataset.x), endY = parseInt(endCell.dataset.y); var dx = Math.sign(endX - startX), dy = Math.sign(endY - startY); if (Math.abs(endX - startX) !== Math.abs(endY - startY) && (startX !== endX && startY !== endY)) return; state.game.selection = [startCell]; var currX = startX, currY = startY; while (currX !== endX || currY !== endY) { currX += dx; currY += dy; var nextCell = ui.wordSearchGrid.querySelector('[data-x="' + currX + '"][data-y="' + currY + '"]'); if(nextCell) state.game.selection.push(nextCell); } state.game.selection.forEach(function(cell) { cell.classList.add('selected'); }); } });
-        document.body.addEventListener('mouseup', function() { GameManager.handleSelectionEnd(); });
-        document.body.addEventListener('mousemove', function(e) { if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return; var x = (e.clientX / window.innerWidth) - 0.5, y = (e.clientY / window.innerHeight) - 0.5; if(ui.holographicPanel) ui.holographicPanel.style.transform = 'rotateX(' + (10 + (y * -5)) + 'deg) rotateY(' + (x * 5) + 'deg)'; document.body.style.setProperty('--grid-x', (-x * 20) + 'px'); document.body.style.setProperty('--grid-y', (-y * 20) + 'px'); });
+        ui.hintButton.addEventListener('click', function() { 
+            GameManager.useHint(); 
+        });
+        ui.shopGrid.addEventListener('click', function(e){ 
+            var btn = e.target.closest('button[data-item-id]'); 
+            if(btn) { 
+                var itemId = btn.dataset.itemId; 
+                var item = SHOP_ITEMS[itemId]; 
+                var profile = state.profiles[state.activeProfile]; 
+                if (profile.creditos >= item.cost) { 
+                    profile.creditos -= item.cost; 
+                    item.onPurchase(profile); 
+                    saveProfiles(); 
+                    renderShop(); 
+                    renderMainMenu(); 
+                    SFX.beep(880,0.12,'sine');
+                } else {
+                    SFX.beep(180,0.2,'sawtooth');
+                }
+            } 
+        });
         
-        EventBus.on('system:requestNavigation', function(d) { if (d.requestFullscreen) { requestFullscreen(); } if(d.windowId === 'mainMenu') { renderMainMenu(); } if(d.windowId) { showWindow(d.windowId); } });
-        EventBus.on('game:victory', function() { renderVictoryProgress(); showWindow('victory'); });
-        EventBus.on('profile:clearActive', function() { state.activeProfile = null; showWindow('profiles'); renderProfiles(); });
-        EventBus.on('profile:deleted', function(d) { delete state.profiles[d.profileName]; saveProfiles(); renderProfiles(); });
+        ui.wordSearchGrid.addEventListener('mousedown', function(e) { 
+            if(e.target.classList.contains('grid-cell')){
+                GameManager.handleSelectionStart(e.target); 
+            } 
+        });
+        ui.wordSearchGrid.addEventListener('mouseover', function(e) { 
+            if (e.target.classList.contains('grid-cell')) { 
+                GameManager.handleSelectionMove(e.target); 
+            } 
+        });
+        document.body.addEventListener('mouseup', function() { 
+            GameManager.handleSelectionEnd(); 
+        });
+        ui.wordSearchGrid.addEventListener('touchstart', function(e) { 
+            if (e.target.classList.contains('grid-cell')) { 
+                e.preventDefault(); 
+                GameManager.handleSelectionStart(e.target); 
+            } 
+        }, { passive: false });
+        ui.wordSearchGrid.addEventListener('touchmove', function(e) { 
+            e.preventDefault(); 
+            var touch = e.touches[0]; 
+            var target = document.elementFromPoint(touch.clientX, touch.clientY); 
+            if (target && target.classList.contains('grid-cell') && target !== state.lastTouchTarget) { 
+                state.lastTouchTarget = target; 
+                GameManager.handleSelectionMove(target); 
+            } 
+        }, { passive: false });
+        document.body.addEventListener('touchend', function() { 
+            state.lastTouchTarget = null; 
+            GameManager.handleSelectionEnd(); 
+        });
+
+        document.body.addEventListener('mousemove', function(e) { 
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return; 
+            var x = (e.clientX / window.innerWidth) - 0.5, y = (e.clientY / window.innerHeight) - 0.5; 
+            if(ui.holographicPanel) ui.holographicPanel.style.transform = 'rotateX(' + (10 + (y * -5)) + 'deg) rotateY(' + (x * 5) + 'deg)'; 
+            document.body.style.setProperty('--grid-x', (-x * 20) + 'px'); 
+            document.body.style.setProperty('--grid-y', (-y * 20) + 'px'); 
+        });
         
-        setTimeout(function() { showWindow('title'); }, 1000);
-        console.log("Sistema WORD SEARCH v1.0.0-r24 estable inicializado.");
+        EventBus.on('system:requestNavigation', function(d) { 
+            if (d.requestFullscreen) { requestFullscreen(); } 
+            if(d.windowId === 'mainMenu') { renderMainMenu(); } 
+            if(d.windowId) { showWindow(d.windowId); } 
+        });
+        EventBus.on('game:victory', function() { 
+            renderVictoryProgress(); 
+            showWindow('victory'); 
+        });
+        EventBus.on('profile:clearActive', function() { 
+            state.activeProfile = null; 
+            showWindow('profiles'); 
+            renderProfiles(); 
+        });
+        EventBus.on('profile:deleted', function(d) { 
+            delete state.profiles[d.profileName]; 
+            saveProfiles(); 
+            renderProfiles(); 
+        });
+        
+        setTimeout(function() { 
+            showWindow('title'); 
+        }, 1000);
+        console.log("Sistema WORD SEARCH v1.5.0-r31 estable + audio + found universal + victory compacto inicializado.");
     });
 })();
 </script>
