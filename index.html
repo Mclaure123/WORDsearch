@@ -3,92 +3,1174 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WORD SEARCH v1.5.0 (r31-STABLE)</title>
+    <title>WORD SEARCH v2.0.0 (ULTRA-EDITION)</title>
     <style>
+        /* ============================================
+           VARIABLES GLOBALES Y CONFIGURACIÓN BASE
+        ============================================ */
         :root {
-            --color-bg-primary: #0A0A0A; --color-surface: #141414; --color-func: #2A2A2A;
-            --color-text-passive: #B0B0B0; --color-text-bright: #FFFFFF; --color-accent-primary: #00FFFF;
-            --color-accent-primary-glow: rgba(0, 255, 255, 0.4); --color-error: #FF414B;
-            --color-success: #39FF14; --color-accent-gold: #FFD700; --color-found: #006B6B;
-            --gap-s: clamp(4px, 1vmin, 8px); --gap-m: clamp(8px, 2vmin, 16px); --gap-l: clamp(16px, 4vmin, 32px);
+            /* Colores principales */
+            --color-bg-primary: #0A0A0A;
+            --color-surface: #141414;
+            --color-func: #2A2A2A;
+            --color-text-passive: #B0B0B0;
+            --color-text-bright: #FFFFFF;
+            --color-accent-primary: #00FFFF;
+            --color-accent-primary-glow: rgba(0, 255, 255, 0.4);
+            --color-error: #FF414B;
+            --color-success: #39FF14;
+            --color-accent-gold: #FFD700;
+            --color-found: #006B6B;
+            
+            /* Espaciado responsivo */
+            --gap-s: clamp(4px, 1vmin, 8px);
+            --gap-m: clamp(8px, 2vmin, 16px);
+            --gap-l: clamp(16px, 4vmin, 32px);
+            
+            /* Transiciones globales */
+            --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-bounce: 600ms cubic-bezier(0.68, -0.55, 0.265, 1.55);
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        html { height: 100%; font-size: clamp(10px, 2.5vmin, 22px); }
-        body { width: 100%; height: 100%; overflow: hidden; background: var(--color-bg-primary); color: var(--color-text-bright); font-family: Consolas, Menlo, Courier New, monospace; font-size: 1rem; position: relative; }
-        #perspective-container { perspective: 1200px; width: 100%; height: 100%; position: relative; }
-        body::after { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(0,0,0,0.5) 0px, rgba(0,0,0,0.4) 1px, transparent 2px, transparent 3px); z-index: 10; animation: scanline-scroll 20s linear infinite; }
-        @keyframes scanline-scroll { to { background-position-y: 100%; } }
-        body::before { --grid-size: 40px; --grid-x: 0px; --grid-y: 0px; content: ""; position: absolute; top: -10%; left: -10%; width: 120%; height: 120%; pointer-events: none; background-image: linear-gradient(var(--color-surface) 1px, transparent 1px), linear-gradient(90deg, var(--color-surface) 1px, transparent 1px); background-size: var(--grid-size) var(--grid-size); background-position: var(--grid-x) var(--grid-y); opacity: 0.05; z-index: -1; transition: background-position 0.2s linear; }
-        main { width: 100%; height: 100%; position: absolute; top: 0; left: 0; transform-style: preserve-3d; }
-        .window { width: 100%; height: 100%; padding: var(--gap-m) var(--gap-l); position: absolute; top: 0; left: 0; display: flex; flex-direction: column; justify-content: space-between; align-items: center; text-align: center; opacity: 0; transform: translateZ(-200px); pointer-events: none; visibility: hidden; transition: opacity 300ms ease-out, transform 300ms ease-out, visibility 300ms; }
-        .window.active { opacity: 1; transform: translateZ(0px); pointer-events: auto; visibility: visible; }
-        .window-content { flex-grow: 1; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: var(--gap-m) 0; min-height: 0; }
-        #preload, #title { justify-content: center; }
-        h1 { font-size: clamp(2rem, 10vmin, 5rem); color: var(--color-accent-primary); letter-spacing: clamp(4px, 1vmin, 8px); text-shadow: 0 0 5px var(--color-accent-primary), 0 0 15px var(--color-accent-primary), 0 0 25px var(--color-accent-primary); max-width: 100%; word-break: break-word; }
-        h2 { font-size: clamp(1.2rem, 4vmin, 1.8rem); color: var(--color-text-bright); margin-bottom: var(--gap-m); }
-        .interactive-button, button { background: var(--color-func); border: 2px solid var(--color-surface); color: var(--color-text-bright); padding: var(--gap-s) var(--gap-m); font-family: inherit; font-size: clamp(0.9rem, 2.5vmin, 1.2rem); cursor: pointer; text-transform: uppercase; transition: background 220ms, border-color 220ms, color 220ms, opacity 220ms, transform 220ms; flex-shrink: 0; }
-        .interactive-button:hover, button:hover { background: var(--color-surface); border-color: var(--color-accent-primary); }
-        .interactive-button:disabled { background: #1a1a1a; border-color: #111; color: #444; cursor: not-allowed; }
-        .telemetry-header, .telemetry-footer { width: 100%; flex-shrink: 0; text-transform: uppercase; color: var(--color-text-passive); font-size: clamp(0.7rem, 2vmin, 0.9rem); letter-spacing: 2px; }
-        .telemetry-header { display: flex; justify-content: space-between; align-items: center; padding: var(--gap-s); border-bottom: 1px solid var(--color-surface); position: relative; }
-        .telemetry-footer { padding: var(--gap-s); border-top: 1px solid var(--color-surface); }
-        .menu-list { display: flex; flex-direction: column; gap: var(--gap-m); width: clamp(320px, 80vw, 800px); }
-        #profilesList { list-style: none; }
-        .profile-entry { display: flex; gap: var(--gap-s); align-items: center; width: 100%; }
-        .profile-button { flex-grow: 1; text-align: left; }
-        .delete-button { flex-shrink: 0; background: var(--color-error); border-color: #8B0000; width: 44px; height: 44px; font-size: 1.2rem; padding: 0; }
-        .level-card { width: 100%; display: flex; align-items: center; justify-content: space-between; padding: var(--gap-s) var(--gap-m); text-align: left; }
-        .rank-badge { width: clamp(50px, 12vmin, 70px); aspect-ratio: 1 / 1.2; margin-right: var(--gap-m); background: var(--color-accent-gold); clip-path: polygon(0% 0%, 100% 0%, 100% 80%, 50% 100%, 0% 80%); padding: 2px; animation: rank-glow 3s ease-in-out infinite; }
-        @keyframes rank-glow { 50% { filter: drop-shadow(0 0 8px var(--color-accent-gold)); } }
-        .rank-glyph { width: 100%; height: 100%; background: var(--color-surface); clip-path: polygon(0% 0%, 100% 0%, 100% 80%, 50% 100%, 0% 80%); display: flex; align-items: center; justify-content: center; font-size: clamp(1.8rem, 8vmin, 2.8rem); color: var(--color-accent-gold); text-shadow: 0 0 8px var(--color-accent-gold); }
-        .level-card .level-info { flex-grow: 1; }
-        .level-card .level-name { font-size: clamp(1rem, 3.5vmin, 1.6rem); color: var(--color-text-bright); display: block; }
-        .level-card .rank-name { font-size: clamp(0.8rem, 2.5vmin, 1.1rem); color: var(--color-text-passive); display: block; }
-        .level-card .repetition-container { display: flex; gap: var(--gap-s); margin-left: var(--gap-m); }
-        .repetition-box { width: clamp(16px, 4vmin, 24px); height: clamp(16px, 4vmin, 24px); border: 2px solid var(--color-func); background: transparent; transition: background 300ms; }
-        .repetition-box.filled { background: var(--color-accent-primary); }
-        #victoryRankProgress { margin: var(--gap-l) 0; }
-        .promotion-title { font-size: 1.5rem; color: var(--color-accent-gold); text-shadow: 0 0 10px var(--color-accent-gold); }
-        #holographic-panel { display: flex; flex-direction: row; flex-wrap: nowrap; align-items: stretch; justify-content: center; gap: var(--gap-l); transform-style: preserve-3d; transform: rotateX(10deg); filter: drop-shadow(0 0 15px var(--color-accent-primary-glow)); width: auto; max-width: 95%; height: 85%; }
-        #wordSearchGrid { display: grid; gap: 4px; background: rgba(0,0,0,0.2); padding: var(--gap-s); border: 2px solid var(--color-func); touch-action: none; height: 100%; aspect-ratio: 1 / 1; grid-template-columns: repeat(var(--grid-size, 10), 1fr); }
-        .grid-cell { display: flex; justify-content: center; align-items: center; font-size: clamp(1rem, 4vmin, 2.5rem); color: var(--color-text-passive); background: var(--color-surface); cursor: pointer; user-select: none; transition: background 150ms, color 150ms, transform 100ms; }
-        .grid-cell.selected { background: var(--color-accent-primary); color: var(--color-bg-primary) !important; transform: scale(1.1); }
-        .grid-cell.found { background: var(--color-found) !important; transition: background 1s; }
-        .grid-cell.found.inactive { background: var(--color-found) !important; }
-        .grid-cell.error { animation: cell-error-flash 300ms ease-in-out; }
-        @keyframes cell-error-flash { 50% { background: var(--color-error); } }
-        .grid-cell.hint { animation: hint-pulse 0.6s ease-in-out 2; }
-        @keyframes hint-pulse { 0%,100% { box-shadow: inset 0 0 0 2px var(--color-accent-primary-glow); } 50% { box-shadow: inset 0 0 0 4px var(--color-accent-primary); } }
-        #wordListContainer { background: var(--color-surface); border: 2px solid var(--color-func); padding: var(--gap-m); width: clamp(220px, 30vw, 350px); height: 100%; display: flex; flex-direction: column;}
-        #wordList { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: var(--gap-s); flex-grow: 1; }
-        #wordList li.found { color: var(--color-text-passive); text-decoration: line-through; opacity: 0.5; }
-        #wordList li.active-word { color: var(--color-accent-gold); border-color: var(--color-accent-gold); box-shadow: 0 0 10px var(--color-accent-gold); }
-        #game-hud { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-top: var(--gap-m); }
-        #word-timer { font-size: 2rem; color: var(--color-accent-gold); }
-        #settingsGear { position: absolute; top: var(--gap-s); right: var(--gap-s); background: transparent; border: 1px solid var(--color-accent-primary); color: var(--color-accent-primary); font-size: 1.2rem; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 20; transition: transform 300ms, background 300ms; }
-        #settingsGear:hover { background: var(--color-accent-primary-glow); transform: rotate(90deg); }
-        #settings { z-index: 30; }
-        #settingsPanel { background: var(--color-surface); border: 2px solid var(--color-accent-primary); padding: var(--gap-l); width: clamp(300px, 90vw, 700px); max-height: 80vh; overflow-y: auto; display: flex; flex-direction: column; gap: var(--gap-m); }
-        #settingsPanel h2 { margin-bottom: var(--gap-m); }
-        .settings-row { display: flex; justify-content: space-between; align-items: center; gap: var(--gap-m); }
-        .settings-row label { flex-shrink: 0; }
-        .two-column { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap-m); }
-        .rank-cell { display: flex; align-items: center; gap: var(--gap-s); }
-        .rank-cell .rank-glyph { width: 30px; height: 30px; font-size: 1.2rem; }
-        .close-button { align-self: flex-end; }
-        #virtualKeyboard { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; max-width: 600px; width: 100%; margin: var(--gap-m) 0; }
-        #virtualKeyboard button { font-size: clamp(0.9rem, 2.5vmin, 1.2rem); padding: var(--gap-s); }
-        #playerNameDisplay { font-size: 2rem; letter-spacing: 4px; margin-bottom: var(--gap-m); min-height: 2.5rem; }
-        @media (max-aspect-ratio: 1/1) { #holographic-panel { flex-direction: column; height: auto; } #wordSearchGrid { width: 100%; height: auto; aspect-ratio: 1/1; } #wordListContainer { width: 100%; height: auto; } }
 
-        /* ===== VICTORY – compacto y centrado ===== */
-        #victory.window         { justify-content: center; align-items: center; }
-        .victory-panel           { background: var(--color-surface); border: 2px solid var(--color-accent-primary); box-shadow: 0 0 20px var(--color-accent-primary-glow); padding: var(--gap-l); text-align: center; display: flex; flex-direction: column; gap: var(--gap-m); min-width: 320px; max-width: 90vw; animation: scan-in .6s ease-out; }
-        @keyframes scan-in       { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
-        .promotion-title         { font-size: clamp(1.4rem, 5vmin, 2.2rem); color: var(--color-accent-gold); text-shadow: 0 0 8px var(--color-accent-gold); margin: 0; }
-        .victory-rank-glyph      { font-size: clamp(3rem, 12vmin, 5rem); line-height: 1; color: var(--color-accent-gold); text-shadow: 0 0 12px var(--color-accent-gold); }
-        .victory-footer          { margin-top: var(--gap-m); }
-</style>
+        /* ============================================
+           RESET Y BASE
+        ============================================ */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            height: 100%;
+            font-size: clamp(10px, 2.5vmin, 22px);
+        }
+
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: var(--color-bg-primary);
+            color: var(--color-text-bright);
+            font-family: Consolas, Menlo, 'Courier New', monospace;
+            font-size: 1rem;
+            position: relative;
+        }
+
+        /* ============================================
+           EFECTOS DE FONDO ANIMADOS
+        ============================================ */
+        #perspective-container {
+            perspective: 1200px;
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        /* Efecto de scanline mejorado */
+        body::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0,0,0,0.5) 0px,
+                rgba(0,0,0,0.4) 1px,
+                transparent 2px,
+                transparent 3px
+            );
+            z-index: 10;
+            animation: scanline-scroll 20s linear infinite;
+        }
+
+        @keyframes scanline-scroll {
+            to { background-position-y: 100%; }
+        }
+
+        /* Grid de fondo con animación parallax */
+        body::before {
+            --grid-size: 40px;
+            --grid-x: 0px;
+            --grid-y: 0px;
+            content: "";
+            position: absolute;
+            top: -10%;
+            left: -10%;
+            width: 120%;
+            height: 120%;
+            pointer-events: none;
+            background-image:
+                linear-gradient(var(--color-surface) 1px, transparent 1px),
+                linear-gradient(90deg, var(--color-surface) 1px, transparent 1px);
+            background-size: var(--grid-size) var(--grid-size);
+            background-position: var(--grid-x) var(--grid-y);
+            opacity: 0.05;
+            z-index: -1;
+            transition: background-position 0.2s linear;
+        }
+
+        /* ============================================
+           SISTEMA DE VENTANAS CON ANIMACIONES 3D
+        ============================================ */
+        main {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            transform-style: preserve-3d;
+        }
+
+        .window {
+            width: 100%;
+            height: 100%;
+            padding: var(--gap-m) var(--gap-l);
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            text-align: center;
+            opacity: 0;
+            transform: translateZ(-200px) rotateY(-15deg);
+            pointer-events: none;
+            visibility: hidden;
+            transition:
+                opacity var(--transition-slow) ease-out,
+                transform var(--transition-slow) ease-out,
+                visibility var(--transition-slow);
+        }
+
+        .window.active {
+            opacity: 1;
+            transform: translateZ(0px) rotateY(0deg);
+            pointer-events: auto;
+            visibility: visible;
+            animation: window-entrance var(--transition-bounce);
+        }
+
+        @keyframes window-entrance {
+            0% {
+                opacity: 0;
+                transform: translateZ(-300px) rotateY(-25deg) scale(0.8);
+            }
+            60% {
+                transform: translateZ(20px) rotateY(2deg) scale(1.02);
+            }
+            100% {
+                opacity: 1;
+                transform: translateZ(0px) rotateY(0deg) scale(1);
+            }
+        }
+
+        .window-content {
+            flex-grow: 1;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: var(--gap-m) 0;
+            min-height: 0;
+        }
+
+        #preload, #title {
+            justify-content: center;
+        }
+
+        /* ============================================
+           TIPOGRAFÍA CON EFECTOS ESPECTACULARES
+        ============================================ */
+        h1 {
+            font-size: clamp(2rem, 10vmin, 5rem);
+            color: var(--color-accent-primary);
+            letter-spacing: clamp(4px, 1vmin, 8px);
+            text-shadow:
+                0 0 5px var(--color-accent-primary),
+                0 0 15px var(--color-accent-primary),
+                0 0 25px var(--color-accent-primary),
+                0 0 40px var(--color-accent-primary);
+            max-width: 100%;
+            word-break: break-word;
+            animation: glow-pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes glow-pulse {
+            0%, 100% {
+                text-shadow:
+                    0 0 5px var(--color-accent-primary),
+                    0 0 15px var(--color-accent-primary),
+                    0 0 25px var(--color-accent-primary),
+                    0 0 40px var(--color-accent-primary);
+            }
+            50% {
+                text-shadow:
+                    0 0 10px var(--color-accent-primary),
+                    0 0 20px var(--color-accent-primary),
+                    0 0 35px var(--color-accent-primary),
+                    0 0 60px var(--color-accent-primary);
+            }
+        }
+
+        h2 {
+            font-size: clamp(1.2rem, 4vmin, 1.8rem);
+            color: var(--color-text-bright);
+            margin-bottom: var(--gap-m);
+            position: relative;
+            animation: slide-in-top 0.5s ease-out;
+        }
+
+        @keyframes slide-in-top {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ============================================
+           BOTONES INTERACTIVOS CON EFECTOS AVANZADOS
+        ============================================ */
+        .interactive-button,
+        button {
+            background: var(--color-func);
+            border: 2px solid var(--color-surface);
+            color: var(--color-text-bright);
+            padding: var(--gap-s) var(--gap-m);
+            font-family: inherit;
+            font-size: clamp(0.9rem, 2.5vmin, 1.2rem);
+            cursor: pointer;
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+            transition:
+                background var(--transition-base),
+                border-color var(--transition-base),
+                color var(--transition-base),
+                transform var(--transition-fast),
+                box-shadow var(--transition-base);
+            flex-shrink: 0;
+        }
+
+        .interactive-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: var(--color-accent-primary-glow);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .interactive-button:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .interactive-button:hover {
+            background: var(--color-surface);
+            border-color: var(--color-accent-primary);
+            transform: translateY(-2px) scale(1.02);
+            box-shadow:
+                0 0 20px var(--color-accent-primary-glow),
+                0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .interactive-button:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        .interactive-button:disabled {
+            background: #1a1a1a;
+            border-color: #111;
+            color: #444;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Efecto ripple en clicks */
+        @keyframes ripple {
+            to {
+                transform: translate(-50%, -50%) scale(4);
+                opacity: 0;
+            }
+        }
+
+        /* ============================================
+           TELEMETRÍA Y HEADERS
+        ============================================ */
+        .telemetry-header,
+        .telemetry-footer {
+            width: 100%;
+            flex-shrink: 0;
+            text-transform: uppercase;
+            color: var(--color-text-passive);
+            font-size: clamp(0.7rem, 2vmin, 0.9rem);
+            letter-spacing: 2px;
+        }
+
+        .telemetry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--gap-s);
+            border-bottom: 1px solid var(--color-surface);
+            position: relative;
+            animation: fade-in 0.8s ease-out;
+        }
+
+        .telemetry-footer {
+            padding: var(--gap-s);
+            border-top: 1px solid var(--color-surface);
+            animation: fade-in 0.8s ease-out 0.2s backwards;
+        }
+
+        @keyframes fade-in {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* ============================================
+           LISTAS Y MENÚS CON ANIMACIONES STAGGER
+        ============================================ */
+        .menu-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--gap-m);
+            width: clamp(320px, 80vw, 800px);
+        }
+
+        .menu-list > * {
+            animation: slide-in-left 0.4s ease-out backwards;
+        }
+
+        .menu-list > *:nth-child(1) { animation-delay: 0.05s; }
+        .menu-list > *:nth-child(2) { animation-delay: 0.1s; }
+        .menu-list > *:nth-child(3) { animation-delay: 0.15s; }
+        .menu-list > *:nth-child(4) { animation-delay: 0.2s; }
+        .menu-list > *:nth-child(5) { animation-delay: 0.25s; }
+        .menu-list > *:nth-child(6) { animation-delay: 0.3s; }
+
+        @keyframes slide-in-left {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        #profilesList {
+            list-style: none;
+        }
+
+        .profile-entry {
+            display: flex;
+            gap: var(--gap-s);
+            align-items: center;
+            width: 100%;
+        }
+
+        .profile-button {
+            flex-grow: 1;
+            text-align: left;
+        }
+
+        .delete-button {
+            flex-shrink: 0;
+            background: var(--color-error);
+            border-color: #8B0000;
+            width: 44px;
+            height: 44px;
+            font-size: 1.2rem;
+            padding: 0;
+            transition: all var(--transition-base);
+        }
+
+        .delete-button:hover {
+            transform: rotate(90deg) scale(1.1);
+            box-shadow: 0 0 20px rgba(255, 65, 75, 0.6);
+        }
+
+        /* ============================================
+           TARJETAS DE NIVEL CON EFECTOS 3D
+        ============================================ */
+        .level-card {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--gap-s) var(--gap-m);
+            text-align: left;
+            transition: all var(--transition-base);
+        }
+
+        .level-card:hover {
+            transform: translateX(10px) scale(1.02);
+            box-shadow:
+                -5px 0 20px var(--color-accent-primary-glow),
+                0 5px 20px rgba(0,0,0,0.3);
+        }
+
+        /* ============================================
+           BADGES DE RANGO CON ANIMACIÓN 3D
+        ============================================ */
+        .rank-badge {
+            width: clamp(50px, 12vmin, 70px);
+            aspect-ratio: 1 / 1.2;
+            margin-right: var(--gap-m);
+            background: var(--color-accent-gold);
+            clip-path: polygon(0% 0%, 100% 0%, 100% 80%, 50% 100%, 0% 80%);
+            padding: 2px;
+            animation: rank-glow-ultra 3s ease-in-out infinite;
+            transform-style: preserve-3d;
+            transition: transform var(--transition-bounce);
+        }
+
+        .rank-badge:hover {
+            animation: rank-rotate 2s ease-in-out infinite;
+        }
+
+        @keyframes rank-glow-ultra {
+            0%, 100% {
+                filter: drop-shadow(0 0 8px var(--color-accent-gold));
+            }
+            50% {
+                filter: drop-shadow(0 0 20px var(--color-accent-gold))
+                       drop-shadow(0 0 30px var(--color-accent-gold));
+            }
+        }
+
+        @keyframes rank-rotate {
+            0%, 100% {
+                transform: rotateY(0deg) scale(1);
+            }
+            50% {
+                transform: rotateY(180deg) scale(1.1);
+            }
+        }
+
+        .rank-glyph {
+            width: 100%;
+            height: 100%;
+            background: var(--color-surface);
+            clip-path: polygon(0% 0%, 100% 0%, 100% 80%, 50% 100%, 0% 80%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(1.8rem, 8vmin, 2.8rem);
+            color: var(--color-accent-gold);
+            text-shadow:
+                0 0 8px var(--color-accent-gold),
+                0 0 16px var(--color-accent-gold);
+        }
+
+        .level-card .level-info {
+            flex-grow: 1;
+        }
+
+        .level-card .level-name {
+            font-size: clamp(1rem, 3.5vmin, 1.6rem);
+            color: var(--color-text-bright);
+            display: block;
+        }
+
+        .level-card .rank-name {
+            font-size: clamp(0.8rem, 2.5vmin, 1.1rem);
+            color: var(--color-text-passive);
+            display: block;
+        }
+
+        .level-card .repetition-container {
+            display: flex;
+            gap: var(--gap-s);
+            margin-left: var(--gap-m);
+        }
+
+        .repetition-box {
+            width: clamp(16px, 4vmin, 24px);
+            height: clamp(16px, 4vmin, 24px);
+            border: 2px solid var(--color-func);
+            background: transparent;
+            transition: all var(--transition-bounce);
+            position: relative;
+        }
+
+        .repetition-box.filled {
+            background: var(--color-accent-primary);
+            box-shadow: 0 0 10px var(--color-accent-primary-glow);
+            animation: box-fill 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        @keyframes box-fill {
+            0% {
+                transform: scale(0) rotate(0deg);
+            }
+            50% {
+                transform: scale(1.3) rotate(180deg);
+            }
+            100% {
+                transform: scale(1) rotate(360deg);
+            }
+        }
+
+        /* ============================================
+           PANEL HOLOGRÁFICO DEL JUEGO
+        ============================================ */
+        #victoryRankProgress {
+            margin: var(--gap-l) 0;
+        }
+
+        .promotion-title {
+            font-size: 1.5rem;
+            color: var(--color-accent-gold);
+            text-shadow:
+                0 0 10px var(--color-accent-gold),
+                0 0 20px var(--color-accent-gold);
+            animation: text-glow-pulse 1s ease-in-out infinite;
+        }
+
+        @keyframes text-glow-pulse {
+            0%, 100% {
+                text-shadow:
+                    0 0 10px var(--color-accent-gold),
+                    0 0 20px var(--color-accent-gold);
+            }
+            50% {
+                text-shadow:
+                    0 0 20px var(--color-accent-gold),
+                    0 0 40px var(--color-accent-gold),
+                    0 0 60px var(--color-accent-gold);
+            }
+        }
+
+        #holographic-panel {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            align-items: stretch;
+            justify-content: center;
+            gap: var(--gap-l);
+            transform-style: preserve-3d;
+            transform: rotateX(10deg);
+            filter: drop-shadow(0 0 15px var(--color-accent-primary-glow));
+            width: auto;
+            max-width: 95%;
+            height: 85%;
+            transition: transform 0.3s ease-out;
+        }
+
+        /* ============================================
+           GRID DE JUEGO CON EFECTOS ESPECTACULARES
+        ============================================ */
+        #wordSearchGrid {
+            display: grid;
+            gap: 4px;
+            background: rgba(0,0,0,0.2);
+            padding: var(--gap-s);
+            border: 2px solid var(--color-func);
+            touch-action: none;
+            height: 100%;
+            aspect-ratio: 1 / 1;
+            grid-template-columns: repeat(var(--grid-size, 10), 1fr);
+            position: relative;
+        }
+
+        .grid-cell {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: clamp(1rem, 4vmin, 2.5rem);
+            color: var(--color-text-passive);
+            background: var(--color-surface);
+            cursor: pointer;
+            user-select: none;
+            transition:
+                background var(--transition-fast),
+                color var(--transition-fast),
+                transform var(--transition-fast),
+                box-shadow var(--transition-fast);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .grid-cell::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, var(--color-accent-primary-glow), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s;
+        }
+
+        .grid-cell:hover::before {
+            transform: translateX(100%);
+        }
+
+        .grid-cell:hover {
+            background: var(--color-func);
+            transform: scale(1.15) rotate(5deg);
+            box-shadow:
+                0 0 10px var(--color-accent-primary-glow),
+                0 5px 15px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+
+        .grid-cell.selected {
+            background: var(--color-accent-primary);
+            color: var(--color-bg-primary) !important;
+            transform: scale(1.1);
+            box-shadow:
+                0 0 20px var(--color-accent-primary),
+                0 0 40px var(--color-accent-primary-glow);
+            animation: cell-pulse 0.3s ease-out;
+        }
+
+        @keyframes cell-pulse {
+            0% {
+                transform: scale(0.9);
+            }
+            50% {
+                transform: scale(1.2);
+            }
+            100% {
+                transform: scale(1.1);
+            }
+        }
+
+        .grid-cell.found {
+            background: var(--color-found) !important;
+            transition: all 1s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            animation: cell-found 0.6s ease-out;
+        }
+
+        @keyframes cell-found {
+            0% {
+                transform: scale(1);
+                filter: brightness(1);
+            }
+            25% {
+                transform: scale(1.3) rotate(10deg);
+                filter: brightness(2) hue-rotate(30deg);
+            }
+            50% {
+                transform: scale(0.9) rotate(-10deg);
+                filter: brightness(1.5) hue-rotate(60deg);
+            }
+            75% {
+                transform: scale(1.1) rotate(5deg);
+                filter: brightness(1.2) hue-rotate(90deg);
+            }
+            100% {
+                transform: scale(1) rotate(0deg);
+                filter: brightness(1);
+            }
+        }
+
+        .grid-cell.found.inactive {
+            background: var(--color-found) !important;
+        }
+
+        .grid-cell.error {
+            animation: cell-error-shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+        }
+
+        @keyframes cell-error-shake {
+            0%, 100% {
+                transform: translateX(0);
+                background: var(--color-surface);
+            }
+            10%, 30%, 50%, 70%, 90% {
+                transform: translateX(-5px) rotate(-5deg);
+                background: var(--color-error);
+            }
+            20%, 40%, 60%, 80% {
+                transform: translateX(5px) rotate(5deg);
+                background: var(--color-error);
+            }
+        }
+
+        .grid-cell.hint {
+            animation: hint-ultra-pulse 0.8s ease-in-out 3;
+        }
+
+        @keyframes hint-ultra-pulse {
+            0%, 100% {
+                box-shadow: inset 0 0 0 2px var(--color-accent-primary-glow);
+                transform: scale(1);
+            }
+            25% {
+                box-shadow: inset 0 0 0 4px var(--color-accent-primary);
+                transform: scale(1.15) rotate(5deg);
+            }
+            50% {
+                box-shadow:
+                    inset 0 0 0 6px var(--color-accent-primary),
+                    0 0 20px var(--color-accent-primary);
+                transform: scale(1.3) rotate(-5deg);
+            }
+            75% {
+                box-shadow: inset 0 0 0 4px var(--color-accent-primary);
+                transform: scale(1.15) rotate(5deg);
+            }
+        }
+
+        /* ============================================
+           LISTA DE PALABRAS Y HUD
+        ============================================ */
+        #wordListContainer {
+            background: var(--color-surface);
+            border: 2px solid var(--color-func);
+            padding: var(--gap-m);
+            width: clamp(220px, 30vw, 350px);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        #wordList {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: var(--gap-s);
+            flex-grow: 1;
+        }
+
+        #wordList li {
+            transition: all var(--transition-base);
+            padding: var(--gap-s);
+            border: 1px solid transparent;
+        }
+
+        #wordList li:hover {
+            background: var(--color-func);
+            transform: translateX(5px);
+        }
+
+        #wordList li.found {
+            color: var(--color-text-passive);
+            text-decoration: line-through;
+            opacity: 0.5;
+            animation: word-found-fade 0.5s ease-out;
+        }
+
+        @keyframes word-found-fade {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+                color: var(--color-success);
+            }
+            100% {
+                opacity: 0.5;
+                transform: scale(1);
+            }
+        }
+
+        #wordList li.active-word {
+            color: var(--color-accent-gold);
+            border-color: var(--color-accent-gold);
+            box-shadow: 0 0 10px var(--color-accent-gold);
+            animation: active-word-pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes active-word-pulse {
+            0%, 100% {
+                box-shadow: 0 0 10px var(--color-accent-gold);
+            }
+            50% {
+                box-shadow:
+                    0 0 20px var(--color-accent-gold),
+                    0 0 30px var(--color-accent-gold);
+            }
+        }
+
+        #game-hud {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-top: var(--gap-m);
+        }
+
+        #word-timer {
+            font-size: 2rem;
+            color: var(--color-accent-gold);
+            text-shadow: 0 0 10px var(--color-accent-gold);
+            animation: timer-glow 1s ease-in-out infinite;
+        }
+
+        @keyframes timer-glow {
+            0%, 100% {
+                text-shadow: 0 0 10px var(--color-accent-gold);
+            }
+            50% {
+                text-shadow:
+                    0 0 20px var(--color-accent-gold),
+                    0 0 30px var(--color-accent-gold);
+            }
+        }
+
+        /* ============================================
+           CONFIGURACIÓN Y SETTINGS
+        ============================================ */
+        #settingsGear {
+            position: absolute;
+            top: var(--gap-s);
+            right: var(--gap-s);
+            background: transparent;
+            border: 1px solid var(--color-accent-primary);
+            color: var(--color-accent-primary);
+            font-size: 1.2rem;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 20;
+            transition:
+                transform var(--transition-bounce),
+                background var(--transition-base);
+        }
+
+        #settingsGear:hover {
+            background: var(--color-accent-primary-glow);
+            transform: rotate(180deg) scale(1.2);
+            box-shadow: 0 0 20px var(--color-accent-primary);
+        }
+
+        #settings {
+            z-index: 30;
+        }
+
+        #settingsPanel {
+            background: var(--color-surface);
+            border: 2px solid var(--color-accent-primary);
+            padding: var(--gap-l);
+            width: clamp(300px, 90vw, 700px);
+            max-height: 80vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: var(--gap-m);
+            box-shadow:
+                0 0 40px var(--color-accent-primary-glow),
+                0 10px 40px rgba(0,0,0,0.5);
+            animation: panel-entrance 0.5s ease-out;
+        }
+
+        @keyframes panel-entrance {
+            0% {
+                opacity: 0;
+                transform: scale(0.8) translateY(-50px);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        #settingsPanel h2 {
+            margin-bottom: var(--gap-m);
+        }
+
+        .settings-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: var(--gap-m);
+            padding: var(--gap-s);
+            border-bottom: 1px solid var(--color-func);
+        }
+
+        .settings-row label {
+            flex-shrink: 0;
+        }
+
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--gap-m);
+        }
+
+        .rank-cell {
+            display: flex;
+            align-items: center;
+            gap: var(--gap-s);
+            padding: var(--gap-s);
+            transition: all var(--transition-base);
+        }
+
+        .rank-cell:hover {
+            background: var(--color-func);
+            transform: translateX(5px);
+        }
+
+        .rank-cell .rank-glyph {
+            width: 30px;
+            height: 30px;
+            font-size: 1.2rem;
+        }
+
+        .close-button {
+            align-self: flex-end;
+            transition: all var(--transition-bounce);
+        }
+
+        .close-button:hover {
+            transform: rotate(90deg) scale(1.2);
+        }
+
+        /* ============================================
+           TECLADO VIRTUAL
+        ============================================ */
+        #virtualKeyboard {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 6px;
+            max-width: 600px;
+            width: 100%;
+            margin: var(--gap-m) 0;
+        }
+
+        #virtualKeyboard button {
+            font-size: clamp(0.9rem, 2.5vmin, 1.2rem);
+            padding: var(--gap-s);
+            transition: all var(--transition-base);
+        }
+
+        #virtualKeyboard button:hover {
+            transform: translateY(-3px) scale(1.05);
+        }
+
+        #virtualKeyboard button:active {
+            transform: translateY(0) scale(0.95);
+        }
+
+        #playerNameDisplay {
+            font-size: 2rem;
+            letter-spacing: 4px;
+            margin-bottom: var(--gap-m);
+            min-height: 2.5rem;
+            color: var(--color-accent-primary);
+            text-shadow: 0 0 10px var(--color-accent-primary);
+            animation: cursor-blink 1s step-end infinite;
+        }
+
+        @keyframes cursor-blink {
+            0%, 50% {
+                border-right: 2px solid var(--color-accent-primary);
+            }
+            51%, 100% {
+                border-right: 2px solid transparent;
+            }
+        }
+
+        /* ============================================
+           PANTALLA DE VICTORIA ULTRA
+        ============================================ */
+        #victory.window {
+            justify-content: center;
+            align-items: center;
+        }
+
+        .victory-panel {
+            background: var(--color-surface);
+            border: 2px solid var(--color-accent-primary);
+            box-shadow:
+                0 0 40px var(--color-accent-primary-glow),
+                0 10px 50px rgba(0,0,0,0.5);
+            padding: var(--gap-l);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: var(--gap-m);
+            min-width: 320px;
+            max-width: 90vw;
+            animation: victory-entrance 1s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            position: relative;
+            overflow: hidden;
+        }
+
+        @keyframes victory-entrance {
+            0% {
+                opacity: 0;
+                transform: scale(0) rotateZ(-180deg);
+            }
+            60% {
+                transform: scale(1.2) rotateZ(10deg);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) rotateZ(0deg);
+            }
+        }
+
+        .victory-panel::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                45deg,
+                transparent,
+                var(--color-accent-primary-glow),
+                transparent
+            );
+            animation: victory-shine 3s linear infinite;
+        }
+
+        @keyframes victory-shine {
+            0% {
+                transform: translateX(-100%) translateY(-100%) rotate(45deg);
+            }
+            100% {
+                transform: translateX(100%) translateY(100%) rotate(45deg);
+            }
+        }
+
+        @media (prefers-reduced-motion: no-preference) {
+            .victory-panel {
+                animation:
+                    victory-entrance 1s cubic-bezier(0.68, -0.55, 0.265, 1.55),
+                    scan-neon 2s ease-in-out infinite 1s;
+            }
+        }
+
+        @keyframes scan-neon {
+            0%, 100% {
+                box-shadow:
+                    inset 0 0 0 1px var(--color-accent-primary-glow),
+                    0 0 20px var(--color-accent-primary);
+            }
+            50% {
+                box-shadow:
+                    inset 0 0 0 3px var(--color-accent-primary),
+                    0 0 60px var(--color-accent-primary-glow),
+                    0 0 100px var(--color-accent-primary);
+            }
+        }
+
+        .victory-rank-glyph {
+            font-size: clamp(3rem, 12vmin, 5rem);
+            line-height: 1;
+            color: var(--color-accent-gold);
+            text-shadow:
+                0 0 20px var(--color-accent-gold),
+                0 0 40px var(--color-accent-gold);
+            animation: rank-victory-spin 2s ease-in-out infinite;
+            position: relative;
+            z-index: 1;
+        }
+
+        @keyframes rank-victory-spin {
+            0%, 100% {
+                transform: rotateY(0deg) scale(1);
+            }
+            50% {
+                transform: rotateY(360deg) scale(1.3);
+            }
+        }
+
+        .victory-footer {
+            margin-top: var(--gap-m);
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ============================================
+           RESPONSIVE DESIGN
+        ============================================ */
+        @media (max-aspect-ratio: 1/1) {
+            #holographic-panel {
+                flex-direction: column;
+                height: auto;
+            }
+
+            #wordSearchGrid {
+                width: 100%;
+                height: auto;
+                aspect-ratio: 1/1;
+            }
+
+            #wordListContainer {
+                width: 100%;
+                height: auto;
+            }
+        }
+
+        /* ============================================
+           PARTÍCULAS DE FONDO (OPCIONAL)
+        ============================================ */
+        @keyframes float-up {
+            0% {
+                transform: translateY(0) translateX(0) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100vh) translateX(50px) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* ============================================
+           SCROLLBAR PERSONALIZADO
+        ============================================ */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--color-surface);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--color-accent-primary);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--color-text-bright);
+        }
+    </style>
 </head>
 <body>
     <div id="perspective-container">
@@ -99,7 +1181,7 @@
             <div id="profiles" class="window">
                 <header class="telemetry-header"><span>WORD SEARCH :: SELECT PROFILE</span><button id="settingsGear" class="interactive-button" data-action="openSettings" title="Configuración [S]">⚙</button></header>
                 <div class="window-content"><h2>PERFILES DE USUARIO</h2><ul id="profilesList" class="menu-list"></ul><button id="goToPlayerCreateButton" class="interactive-button" data-action="goToPlayerCreate">CREAR NUEVO PERFIL</button></div>
-                <footer class="telemetry-footer">BUILD: v1.5.0-r31</footer>
+                <footer class="telemetry-footer">BUILD: v2.0.0-ULTRA</footer>
             </div>
 
             <div id="player" class="window">
@@ -111,7 +1193,7 @@
                     <button id="cancelPlayerButton" style="margin-top: var(--gap-m);" data-action="goToProfiles">CANCELAR</button>
                     <button id="confirmPlayerButton" style="margin-top: var(--gap-m);" data-action="confirmPlayerName">CONFIRMAR</button>
                  </div>
-                 <footer class="telemetry-footer">BUILD: v1.5.0-r31</footer>
+                 <footer class="telemetry-footer">BUILD: v2.0.0-ULTRA</footer>
             </div>
 
             <div id="mainMenu" class="window">
@@ -124,22 +1206,21 @@
                         <button id="backToProfilesButton" data-action="clearActiveProfile">CAMBIAR PERFIL</button>
                     </div>
                 </div>
-                <footer class="telemetry-footer">BUILD: v1.5.0-r31</footer>
+                <footer class="telemetry-footer">BUILD: v2.0.0-ULTRA</footer>
             </div>
             
             <div id="shop" class="window">
                 <header class="telemetry-header"><span id="shop-header">TIENDA</span><button id="settingsGear4" class="interactive-button" data-action="openSettings" title="Configuración [S]">⚙</button></header>
                 <div class="window-content"><h2>CONSUMIBLES</h2><div id="shopGrid"></div><button id="backToMenuButton" style="margin-top:var(--gap-l);" data-action="goToMainMenu">VOLVER AL MENÚ</button></div>
-                <footer class="telemetry-footer">BUILD: v1.5.0-r31</footer>
+                <footer class="telemetry-footer">BUILD: v2.0.0-ULTRA</footer>
             </div>
 
             <div id="game" class="window">
                 <header class="telemetry-header"><span id="gameHeaderTitle">JUGADOR :: CARGANDO...</span><button id="settingsGear5" class="interactive-button" data-action="openSettings" title="Configuración [S]">⚙</button></header>
                 <div class="window-content"><div id="holographic-panel"><div id="wordSearchGrid"></div><div id="wordListContainer"><h3>PALABRAS A ENCONTRAR</h3><ul id="wordList"></ul><div id="game-hud"><button id="hint-button">[ PISTA (0) ]</button><div id="word-timer">00:00</div></div></div></div></div>
-                <footer class="telemetry-footer">BUILD: v1.5.0-r31</footer>
+                <footer class="telemetry-footer">BUILD: v2.0.0-ULTRA</footer>
             </div>
 
-            <!-- VICTORY – compacto y centrado -->
             <div id="victory" class="window">
                 <div class="victory-panel">
                     <h1>NIVEL COMPLETADO</h1>
@@ -152,7 +1233,6 @@
 
             <div id="fullscreenOverlay" class="window" style="z-index: 999; background: rgba(0,0,0,0.95);"><h2>MODO PANTALLA COMPLETA REQUERIDO</h2><button id="reEnterFullscreenButton" data-action="requestFullscreen">REACTIVAR</button></div>
 
-            <!-- SETTINGS -->
             <div id="settings" class="window">
                 <div id="settingsPanel">
                     <button class="interactive-button close-button" data-action="closeSettings">✖</button>
@@ -222,13 +1302,24 @@
         victoryRankProgress: document.getElementById('victoryRankProgress'),
         soundToggle: document.getElementById('soundToggle'), paletteSelect: document.getElementById('paletteSelect'), ranksList: document.getElementById('ranksList')
     };
-    var PROFILES_KEY = 'ws-profiles-v150'; var SETTINGS_KEY = 'ws-settings-v150';
+    var PROFILES_KEY = 'ws-profiles-v200'; var SETTINGS_KEY = 'ws-settings-v200';
     var PLAYER_KEYBOARD_LAYOUT = [
         ['Q','W','E','R','T','Y','U','I','O','P'],
         ['A','S','D','F','G','H','J','K','L','Ñ'],
         ['Z','X','C','V','B','N','M','Backspace','Enter','Space']
     ];
-    var WORD_LISTS = { facil: ['API', 'BUG', 'BOT', 'BIT', 'BIOS', 'BLOG', 'BYTE', 'CACHE', 'CHIP', 'CHAT', 'CSS', 'DATO', 'DNS', 'DOM', 'DOS', 'DRM', 'EMAIL', 'FTP', 'GIF', 'GUI', 'HILO', 'HOST', 'HTML', 'HTTP', 'HUB', 'ICONO', 'JAVA', 'JSON', 'JQUERY', 'KERNEL', 'LAN', 'LINK', 'LOG', 'LUA', 'MAC'], medio: ['ARRAY', 'ASCII', 'AVATAR', 'ANCHO', 'BANDA', 'BETA', 'BACKUP', 'CLASE', 'CLIENTE', 'CODIGO', 'COOKIE', 'DRIVER', 'DEBUG', 'ENLACE', 'EVENTO', 'FRAME', 'FUENTE', 'FUNCION', 'GAMING', 'GMAIL', 'HASHTAG', 'HEADER', 'INDEX', 'INPUT', 'LATENCIA', 'LOGIN', 'LOOP', 'MASCARA', 'MATRIZ', 'NODO', 'NUBE', 'OBJETO', 'ONLINE', 'OUTPUT', 'PUNTERO'], dificil: ['ALGORITMO', 'ANALOGICO', 'APLICACION', 'ARCHIVO', 'BACKEND', 'BINARIO', 'BIOMETRIA', 'BLUETOOTH', 'COMPILAR', 'CODIFICAR', 'CONSOLA', 'CONSTANTE', 'CONTRASEÑA', 'CPU', 'CRIPTOGRAFIA', 'DEPURADOR', 'DESCARGAR', 'DIRECTORIO', 'ENCRIPTAR', 'FRAMEWORK', 'FIREWALL', 'GIGABYTE', 'HARDWARE', 'HACKATHON', 'HERTZ', 'INTERFAZ', 'INTERNET', 'INTRANET', 'JAVASCRIPT', 'LICENCIA', 'MALWARE', 'MEMORIA', 'METADATOS', 'MICROCHIP', 'MODULAR'] };
+    /* 56 palabras por nivel */
+    var WORD_LISTS = {
+      facil: [
+        'API','BUG','BOT','BIT','BIOS','BLOG','BYTE','CACHE','CHIP','CHAT','CSS','DATO','DNS','DOM','DOS','DRM','EMAIL','FTP','GIF','GUI','HILO','HOST','HTML','HTTP','HUB','ICONO','JAVA','JSON','JQUERY','KERNEL','LAN','LINK','LOG','LUA','MAC','MODEM','MOUSE','NFO','NODE','PING','PORT','POST','PROMPT','PROTOCOLO','PROXY','PUNTO','PUSH','QUERY','ROOT','ROUTER','SCRIPT','SERIAL','SERVIDOR','SISTEMA','SOCKET','SOFTWARE'
+      ],
+      medio: [
+        'ARRAY','ASCII','AVATAR','ANCHO','BANDA','BETA','BACKUP','CLASE','CLIENTE','CODIGO','COOKIE','DRIVER','DEBUG','ENLACE','EVENTO','FRAME','FUENTE','FUNCION','GAMING','GMAIL','HASHTAG','HEADER','INDEX','INPUT','LATENCIA','LOGIN','LOOP','MASCARA','MATRIZ','NODO','NUBE','OBJETO','ONLINE','OUTPUT','PUNTERO','PUERTO','QUERY','REBOOT','REGEX','RELOJ','RENDER','REPO','REQUEST','RESPONSE','ROUTER','RUNTIME','SCAN','SCRIPT','SERIAL','SERVICIO','SESSION','SISTEMA','SNAPSHOT','SOCKET','SOFTWARE','SOURCE','STACK'
+      ],
+      dificil: [
+        'ALGORITMO','ANALOGICO','APLICACION','ARCHIVO','BACKEND','BINARIO','BIOMETRIA','BLUETOOTH','COMPILAR','CODIFICAR','CONSOLA','CONSTANTE','CONTRASEÑA','CPU','CRIPTOGRAFIA','DEPURADOR','DESCARGAR','DIRECTORIO','ENCRIPTAR','FRAMEWORK','FIREWALL','GIGABYTE','HARDWARE','HACKATHON','HERTZ','INTERFAZ','INTERNET','INTRANET','JAVASCRIPT','LICENCIA','MALWARE','MEMORIA','METADATOS','MICROCHIP','MODULAR','MONITOR','NEURONAL','OBJETO','OPENSTACK','OPTIMIZAR','OVERCLOCK','PARTICION','PATCH','PLATAFORMA','PLUGIN','POLIMORFIA','POOL','PUERTO','RAID','REPOSITORIO','ROUTER','SEGMENTO','SERVIDOR','SISTEMA','SOFTWARE','SUBRUTINA','SYNCHRONIZE'
+      ]
+    };
     var DIRECTIONS = [{f:'H',x:1,y:0},{f:'V',x:0,y:1},{f:'D',x:1,y:1},{f:'HI',x:-1,y:0},{f:'VI',x:0,y:-1},{f:'DI',x:-1,y:-1},{f:'DA',x:1,y:-1},{f:'DAI',x:-1,y:1}];
     var RANKS = [ 
         { name: 'RECLUTA',      glyph: 'ˇ' }, 
@@ -267,6 +1358,7 @@
                     if (!p[name].usedWords) p[name].usedWords = { facil: [], medio: [], dificil: [] };
                     if (!p[name].creditos) p[name].creditos = 0;
                     if (!p[name].inventory) p[name].inventory = { hints: 3 };
+                    if (!p[name].placedPositions) p[name].placedPositions = { facil: [], medio: [], dificil: [] };
                 });
                 state.profiles = p;
             }
@@ -355,20 +1447,45 @@
         profile.usedWords[difficulty] = usedList.concat(wordsToPlace);
         var grid = Array(config.size).fill(0).map(function() { return Array(config.size).fill(null); });
         var placedWords = [];
+
+        /* ===== anti-repetición de posiciones ===== */
+        var hashPos = function(cells, dir) { return cells[0].x + ',' + cells[0].y + ',' + dir; };
+        var placedHash = profile.placedPositions[difficulty] || [];
+        var attemptsPos = 0;
+
         wordsToPlace.forEach(function(word) {
-            var attempts = 0;
-            while (attempts < 100) {
+            var placed = false, tries = 0;
+            while (!placed && tries < 200) {
                 var dir = DIRECTIONS[Math.floor(Math.random() * DIRECTIONS.length)];
-                var startX = Math.floor(Math.random() * config.size), startY = Math.floor(Math.random() * config.size);
-                var endX = startX + (word.length - 1) * dir.x, endY = startY + (word.length - 1) * dir.y;
+                var startX = Math.floor(Math.random() * config.size);
+                var startY = Math.floor(Math.random() * config.size);
+                var endX = startX + (word.length - 1) * dir.x;
+                var endY = startY + (word.length - 1) * dir.y;
                 if (endX >= 0 && endX < config.size && endY >= 0 && endY < config.size) {
                     var canPlace = true, cells = [];
-                    for (var i = 0; i < word.length; i++) { var x = startX + i * dir.x, y = startY + i * dir.y; if (grid[y][x] !== null && grid[y][x] !== word[i]) { canPlace = false; break; } cells.push({ x: x, y: y }); }
-                    if (canPlace) { for (var i = 0; i < word.length; i++) { grid[cells[i].y][cells[i].x] = word[i]; } placedWords.push({ text: word, cells: cells, direction: dir.f }); return; }
+                    for (var i = 0; i < word.length; i++) {
+                        var x = startX + i * dir.x, y = startY + i * dir.y;
+                        if (grid[y][x] !== null && grid[y][x] !== word[i]) { canPlace = false; break; }
+                        cells.push({x: x, y: y});
+                    }
+                    if (canPlace) {
+                        var h = hashPos(cells, dir.f);
+                        if (placedHash.indexOf(h) === -1) {
+                            for (var j = 0; j < word.length; j++) grid[cells[j].y][cells[j].x] = word[j];
+                            placedWords.push({text: word, cells: cells, direction: dir.f});
+                            placedHash.push(h);
+                            placed = true;
+                        } else {
+                            attemptsPos++;
+                            if (attemptsPos > 3) { placedHash.length = 0; }
+                        }
+                    }
                 }
-                attempts++;
+                tries++;
             }
         });
+        profile.placedPositions[difficulty] = placedHash;
+
         for (var y = 0; y < config.size; y++) { for (var x = 0; x < config.size; x++) { if (grid[y][x] === null) { grid[y][x] = 'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ'[Math.floor(Math.random() * 27)]; } } }
         return { grid: grid, words: placedWords, size: config.size };
     }
@@ -529,7 +1646,7 @@
                 setTimeout(function() { 
                     selectedCells.forEach(function(cell) { cell.classList.remove('error'); }); 
                     GameManager.clearSelectionUI(); 
-                }, 300);
+                }, 400);
             }
         },
         checkGameState: function() {
@@ -567,7 +1684,7 @@
                 if (cellEl) { 
                     cellEl.classList.add('hint'); 
                     SFX.beep(660,0.12,'triangle');
-                    setTimeout(function() { cellEl.classList.remove('hint'); }, 600); 
+                    setTimeout(function() { cellEl.classList.remove('hint'); }, 800); 
                 }
                 saveProfiles(); 
                 this.updateHud();
@@ -628,7 +1745,7 @@
                 case 'confirmPlayerName': 
                     var name = state.newPlayerName.trim();
                     if(name.length > 0 && !state.profiles[name]){
-                        state.profiles[name] = { ranks: { facil: 0, medio: 0, dificil: 0 }, repetitions: { facil: 0, medio: 0, dificil: 0 }, usedWords: { facil: [], medio: [], dificil: [] }, creditos: 0, inventory: { hints: 3 } };
+                        state.profiles[name] = { ranks: { facil: 0, medio: 0, dificil: 0 }, repetitions: { facil: 0, medio: 0, dificil: 0 }, usedWords: { facil: [], medio: [], dificil: [] }, creditos: 0, inventory: { hints: 3 }, placedPositions: { facil: [], medio: [], dificil: [] } };
                         state.activeProfile = name;
                         saveProfiles();
                         showWindow('mainMenu');
@@ -772,11 +1889,18 @@
             saveProfiles(); 
             renderProfiles(); 
         });
+        EventBus.on('settings:toggle', function() { 
+            if (state.currentWindow === 'settings') { 
+                showWindow('mainMenu'); 
+            } else { 
+                showWindow('settings'); 
+            } 
+        });
         
         setTimeout(function() { 
             showWindow('title'); 
         }, 1000);
-        console.log("Sistema WORD SEARCH v1.5.0-r31 estable + audio + found universal + victory compacto inicializado.");
+        console.log("Sistema WORD SEARCH v2.0.0-ULTRA con animaciones espectaculares inicializado.");
     });
 })();
 </script>
